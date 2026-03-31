@@ -1,52 +1,34 @@
 'use client';
 
-import {
-  animate,
-  motion,
-  useAnimationFrame,
-  useMotionValue,
-} from 'framer-motion';
+import { animate, motion, useAnimationFrame, useMotionValue } from 'framer-motion';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 // ── Config ──────────────────────────────────────────────────────────
 const CONFIG = {
-  name: 'Jakob Eck Friberg',
-  rowCount: 7,
-  middleRow: 3,               // 0-indexed (row 4 of 7)
-  repeatCount: 30,
-
-  // Typography
+  rows: 7,                     // number of text rows
+  fontWeight: 900,             // text thickness (100–900)
   letterSpacing: '0.08em',
-  fontWeight: 900,             // 100–900, controls text fatness
 
-  // Scroll speed (pixels per frame at ~60fps)
-  scrollBaseSpeed: 1.5,        // base px/frame
-  scrollSpeedVariation: 0.3,   // multiplied by row index for variety
+  // How many seconds one full scroll cycle takes (lower = faster)
+  scrollSpeed: 120,
 
-  // Mouse Y-axis speed scaling (top = fast, bottom = slow)
-  mouseSpeedMin: 0.2,          // speed multiplier at bottom of screen
-  mouseSpeedMax: 1.5,          // speed multiplier at top of screen
-  mouseYMin: 0.1,              // fraction of viewport height — above this = max speed
-  mouseYMax: 0.9,              // fraction of viewport height — below this = min speed
+  // Mouse at top of screen = fast, bottom = slow
+  speedAtTop: 1.0,
+  speedAtBottom: 0.3,
+  speedSmoothing: 0.03,        // how gradually speed changes (lower = smoother)
 
-  // Speed inertia (smooth lerp toward target speed)
-  speedInertia: 0.03,          // 0 = no change, 1 = instant snap. Lower = more inertia
-
-  // Lock-on animation
-  lockDuration: 1.2,
-  lockEase: [0.16, 1, 0.3, 1] as [number, number, number, number],
-
-  // Phase timing (ms after interaction)
-  highlightDelay: 1300,
-  fadeDelay: 2100,
-  completeDelay: 2900,
-
-  // Fade durations (seconds)
-  otherRowsFadeDuration: 0.6,
-  introFadeDuration: 0.8,
+  // Timing after click/scroll (ms) — controls the lock → highlight → fade sequence
+  lockDuration: 1200,          // slide animation
+  highlightAt: 1300,           // when the name highlights
+  fadeAt: 2100,                // when intro starts fading
+  doneAt: 2900,                // when main page appears
 };
 
-const SEPARATOR = ' ';
+// ── Derived constants (don't edit) ──────────────────────────────────
+const MIDDLE_ROW = Math.floor(CONFIG.rows / 2);
+const COPIES = 20;
+
+const LOCK_EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 type Phase = 'scrolling' | 'locking' | 'highlighted' | 'fading';
 
@@ -54,71 +36,86 @@ interface TextIntroProps {
   onComplete: () => void;
 }
 
-type SpeedRef = React.RefObject<number>;
+// ── Name with data-eck span for future glow effects ──
+function NameText() {
+  return <>Jakob <span data-eck>Eck</span> Friberg </>;
+}
 
-// ── ScrollingRow (non-middle rows) ──
+// ── Web Animations API marquee with playbackRate control ──
+function useMarqueeAnimation(
+  elRef: React.RefObject<HTMLDivElement | null>,
+  duration: number,
+  reverse: boolean,
+  speedRef: React.RefObject<number>,
+  enabled: boolean,
+) {
+  const animRef = useRef<Animation | null>(null);
+
+  useEffect(() => {
+    const el = elRef.current;
+    if (!el) return;
+
+    const anim = el.animate(
+      [
+        { transform: 'translateX(0)' },
+        { transform: 'translateX(-50%)' },
+      ],
+      {
+        duration: duration * 1000,
+        iterations: Infinity,
+        easing: 'linear',
+        direction: reverse ? 'reverse' : 'normal',
+      },
+    );
+
+    animRef.current = anim;
+    return () => { anim.cancel(); animRef.current = null; };
+  }, [elRef, duration, reverse]);
+
+  useAnimationFrame(() => {
+    const anim = animRef.current;
+    if (!anim || !enabled) return;
+    anim.playbackRate = speedRef.current;
+  });
+
+  return animRef;
+}
+
+// ── ScrollingRow ──
 function ScrollingRow({
-  index,
-  phase,
-  speedRef,
+  index, phase, speedRef,
 }: {
   index: number;
   phase: Phase;
-  speedRef: SpeedRef;
+  speedRef: React.RefObject<number>;
 }) {
-  const direction = index % 2 === 0 ? 1 : -1;
+  const rowRef = useRef<HTMLDivElement>(null);
+  const isReverse = index % 2 !== 0;
   const isPostScroll = phase !== 'scrolling';
-  const rowSpeed = CONFIG.scrollBaseSpeed * (1 + index * CONFIG.scrollSpeedVariation);
-  const x = useMotionValue(direction === 1 ? -2000 : -8000);
-  const elRef = useRef<HTMLDivElement>(null);
-  const halfWidthRef = useRef(0);
+  const duration = CONFIG.scrollSpeed + index * 5;
 
-  const repeatedText = Array(CONFIG.repeatCount)
-    .fill(CONFIG.name)
-    .join(SEPARATOR);
+  useMarqueeAnimation(rowRef, duration, isReverse, speedRef, !isPostScroll);
 
-  // Measure half the total scroll width for wrapping
-  useEffect(() => {
-    if (elRef.current) {
-      halfWidthRef.current = elRef.current.scrollWidth / 2;
-    }
-  }, []);
-
-  useAnimationFrame((_, delta) => {
-    if (isPostScroll) return;
-    const pxPerMs = rowSpeed / 16.67;
-    let newX = x.get() + direction * pxPerMs * speedRef.current * delta;
-
-    // Wrap to create infinite scroll
-    const hw = halfWidthRef.current;
-    if (hw > 0) {
-      if (newX > 0) newX -= hw;
-      if (newX < -hw) newX += hw;
-    }
-
-    x.set(newX);
-  });
+  const content = Array(COPIES).fill(null).map((_, i) => (
+    <span key={i}><NameText /></span>
+  ));
 
   return (
     <div className="overflow-hidden whitespace-nowrap w-full flex-1 flex items-center">
       <motion.div
-        ref={elRef}
-        className="inline-block whitespace-nowrap select-none font-display"
+        ref={rowRef}
+        className="inline-flex whitespace-nowrap select-none font-display"
         style={{
-          x,
-          fontSize: 'calc(100vh / 7)',
+          fontSize: `calc(100vh / ${CONFIG.rows})`,
           lineHeight: '1.1',
           letterSpacing: CONFIG.letterSpacing,
           fontWeight: CONFIG.fontWeight,
         }}
-        animate={{
-          opacity: isPostScroll ? 0.08 : 1,
-        }}
-        transition={{
-          opacity: { duration: CONFIG.otherRowsFadeDuration },
-        }}
+        animate={{ opacity: isPostScroll ? 0.08 : 1 }}
+        transition={{ opacity: { duration: 0.6 } }}
       >
-        {repeatedText}
+        <span className="marquee-half">{content}</span>{'\u00A0'}
+        <span className="marquee-half" aria-hidden="true">{content}</span>
       </motion.div>
     </div>
   );
@@ -126,97 +123,77 @@ function ScrollingRow({
 
 // ── MiddleRow ──
 function MiddleRow({
-  phase,
-  speedRef,
+  phase, speedRef,
 }: {
   phase: Phase;
-  speedRef: SpeedRef;
+  speedRef: React.RefObject<number>;
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const direction = CONFIG.middleRow % 2 === 0 ? 1 : -1;
-  const rowSpeed = CONFIG.scrollBaseSpeed * (1 + CONFIG.middleRow * CONFIG.scrollSpeedVariation);
-  const x = useMotionValue(direction === 1 ? -2000 : -8000);
+  const rowRef = useRef<HTMLDivElement>(null);
+  const isReverse = MIDDLE_ROW % 2 !== 0;
+  const duration = CONFIG.scrollSpeed + MIDDLE_ROW * 5;
   const phaseRef = useRef(phase);
   phaseRef.current = phase;
-  const halfWidthRef = useRef(0);
+  const x = useMotionValue(0);
+  const [locked, setLocked] = useState(false);
 
-  // Measure half width for wrapping
-  useEffect(() => {
-    if (containerRef.current) {
-      halfWidthRef.current = containerRef.current.scrollWidth / 2;
-    }
-  }, []);
+  const animRef = useMarqueeAnimation(
+    rowRef, duration, isReverse, speedRef, phase === 'scrolling',
+  );
 
-  // Scroll loop — only runs during 'scrolling' phase
-  useAnimationFrame((_, delta) => {
-    if (phaseRef.current !== 'scrolling') return;
-    const pxPerMs = rowSpeed / 16.67;
-    let newX = x.get() + direction * pxPerMs * speedRef.current * delta;
-
-    // Wrap to create infinite scroll
-    const hw = halfWidthRef.current;
-    if (hw > 0) {
-      if (newX > 0) newX -= hw;
-      if (newX < -hw) newX += hw;
-    }
-
-    x.set(newX);
-  });
-
-  // Lock-on: find closest name span and animate to center it
   useEffect(() => {
     if (phase !== 'locking') return;
 
-    const container = containerRef.current;
-    if (!container) return;
+    const el = rowRef.current;
+    const anim = animRef.current;
+    if (!el || !anim) return;
 
-    const viewportCenter = window.innerWidth / 2;
-    const spans = container.querySelectorAll<HTMLSpanElement>('[data-name]');
-    let closestSpan: HTMLSpanElement | undefined;
-    let closestDist = Infinity;
+    anim.pause();
+    const matrix = new DOMMatrix(getComputedStyle(el).transform);
+    const currentX = matrix.m41;
+    anim.cancel();
+    x.set(currentX);
+    setLocked(true);
 
-    spans.forEach((span) => {
-      const rect = span.getBoundingClientRect();
-      const spanCenter = rect.left + rect.width / 2;
-      const dist = Math.abs(spanCenter - viewportCenter);
-      if (dist < closestDist) {
-        closestDist = dist;
-        closestSpan = span;
-      }
+    requestAnimationFrame(() => {
+      const center = window.innerWidth / 2;
+      const spans = el.querySelectorAll<HTMLSpanElement>('[data-name]');
+      let closest: HTMLSpanElement | undefined;
+      let minDist = Infinity;
+
+      spans.forEach((span) => {
+        const rect = span.getBoundingClientRect();
+        const dist = Math.abs(rect.left + rect.width / 2 - center);
+        if (dist < minDist) { minDist = dist; closest = span; }
+      });
+
+      if (!closest) return;
+      const r = closest.getBoundingClientRect();
+      animate(x, x.get() + (center - (r.left + r.width / 2)), {
+        duration: CONFIG.lockDuration / 1000,
+        ease: LOCK_EASE,
+      });
     });
+  }, [phase, x, animRef]);
 
-    if (!closestSpan) return;
-
-    const spanRect = (closestSpan as HTMLSpanElement).getBoundingClientRect();
-    const spanCenter = spanRect.left + spanRect.width / 2;
-    const offset = viewportCenter - spanCenter;
-
-    const targetX = x.get() + offset;
-    animate(x, targetX, {
-      duration: CONFIG.lockDuration,
-      ease: CONFIG.lockEase,
-    });
-  }, [phase, x]);
+  const content = Array(COPIES).fill(null).map((_, i) => (
+    <span key={i}><span data-name><NameText /></span></span>
+  ));
 
   return (
     <div className="overflow-hidden whitespace-nowrap w-full flex-1 flex items-center">
       <motion.div
-        ref={containerRef}
-        className="inline-block whitespace-nowrap select-none font-display"
+        ref={rowRef}
+        className="inline-flex whitespace-nowrap select-none font-display"
         style={{
-          x,
-          fontSize: 'calc(100vh / 7)',
+          ...(locked ? { x } : {}),
+          fontSize: `calc(100vh / ${CONFIG.rows})`,
           lineHeight: '1.1',
           letterSpacing: CONFIG.letterSpacing,
           fontWeight: CONFIG.fontWeight,
         }}
       >
-        {Array(CONFIG.repeatCount).fill(null).map((_, i) => (
-          <span key={i}>
-            {i > 0 && SEPARATOR}
-            <span data-name>{CONFIG.name}</span>
-          </span>
-        ))}
+        <span className="marquee-half">{content}</span>{'\u00A0'}
+        <span className="marquee-half" aria-hidden="true">{content}</span>
       </motion.div>
     </div>
   );
@@ -236,14 +213,14 @@ function HighlightedName({ phase }: { phase: Phase }) {
       <span
         className="select-none font-display"
         style={{
-          fontSize: 'calc(100vh / 7)',
+          fontSize: `calc(100vh / ${CONFIG.rows})`,
           lineHeight: '1.1',
           letterSpacing: CONFIG.letterSpacing,
           fontWeight: CONFIG.fontWeight,
           color: 'var(--foreground)',
         }}
       >
-        {CONFIG.name}
+        <NameText />
       </span>
     </motion.div>
   );
@@ -254,90 +231,60 @@ export default function TextIntro({ onComplete }: TextIntroProps) {
   const [phase, setPhase] = useState<Phase>('scrolling');
   const hasInteracted = useRef(false);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const speedMultiplierRef = useRef(1);
+  const speedRef = useRef(1);
   const targetSpeedRef = useRef(1);
 
-  // Mouse Y-axis speed: top = fast, bottom = slow
+  // Mouse Y → speed: top = fast, bottom = slow
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      const yFraction = e.clientY / window.innerHeight;
-      // Map: top (0) → max speed, bottom (1) → min speed
-      const t = Math.max(0, Math.min(1,
-        (yFraction - CONFIG.mouseYMin) / (CONFIG.mouseYMax - CONFIG.mouseYMin)
-      ));
-      targetSpeedRef.current = CONFIG.mouseSpeedMax + t * (CONFIG.mouseSpeedMin - CONFIG.mouseSpeedMax);
+      const t = Math.max(0, Math.min(1, e.clientY / window.innerHeight));
+      targetSpeedRef.current = CONFIG.speedAtTop + t * (CONFIG.speedAtBottom - CONFIG.speedAtTop);
     };
-
     window.addEventListener('mousemove', handler);
     return () => window.removeEventListener('mousemove', handler);
   }, []);
 
-  // Lerp the actual speed toward the target each frame (inertia)
+  // Smooth speed toward target
   useAnimationFrame(() => {
-    speedMultiplierRef.current +=
-      (targetSpeedRef.current - speedMultiplierRef.current) * CONFIG.speedInertia;
+    speedRef.current += (targetSpeedRef.current - speedRef.current) * CONFIG.speedSmoothing;
   });
 
-  // Interaction triggers lock sequence
+  // Any interaction triggers the lock → highlight → fade → done sequence
   const triggerLock = useCallback(() => {
     if (hasInteracted.current) return;
     hasInteracted.current = true;
     setPhase('locking');
 
     timersRef.current = [
-      setTimeout(() => setPhase('highlighted'), CONFIG.highlightDelay),
-      setTimeout(() => setPhase('fading'), CONFIG.fadeDelay),
-      setTimeout(() => onComplete(), CONFIG.completeDelay),
+      setTimeout(() => setPhase('highlighted'), CONFIG.highlightAt),
+      setTimeout(() => setPhase('fading'), CONFIG.fadeAt),
+      setTimeout(() => onComplete(), CONFIG.doneAt),
     ];
   }, [onComplete]);
 
   useEffect(() => {
     const handler = () => triggerLock();
-
-    window.addEventListener('click', handler);
-    window.addEventListener('wheel', handler);
-    window.addEventListener('keydown', handler);
-    window.addEventListener('touchstart', handler);
-
-    return () => {
-      window.removeEventListener('click', handler);
-      window.removeEventListener('wheel', handler);
-      window.removeEventListener('keydown', handler);
-      window.removeEventListener('touchstart', handler);
-    };
+    const events = ['click', 'wheel', 'keydown', 'touchstart'] as const;
+    events.forEach((e) => window.addEventListener(e, handler));
+    return () => events.forEach((e) => window.removeEventListener(e, handler));
   }, [triggerLock]);
 
-  // Cleanup timers on unmount
-  useEffect(() => {
-    return () => {
-      timersRef.current.forEach(clearTimeout);
-    };
-  }, []);
+  useEffect(() => () => timersRef.current.forEach(clearTimeout), []);
 
   return (
     <motion.div
       className="fixed inset-0 z-50 flex flex-col overflow-hidden"
       style={{ backgroundColor: 'var(--background)' }}
       animate={{ opacity: phase === 'fading' ? 0 : 1 }}
-      transition={{ duration: CONFIG.introFadeDuration, ease: 'easeInOut' }}
+      transition={{ duration: 0.8, ease: 'easeInOut' }}
     >
-      {Array.from({ length: CONFIG.rowCount }).map((_, i) =>
-        i === CONFIG.middleRow ? (
-          <MiddleRow
-            key={i}
-            phase={phase}
-            speedRef={speedMultiplierRef}
-          />
+      {Array.from({ length: CONFIG.rows }).map((_, i) =>
+        i === MIDDLE_ROW ? (
+          <MiddleRow key={i} phase={phase} speedRef={speedRef} />
         ) : (
-          <ScrollingRow
-            key={i}
-            index={i}
-            phase={phase}
-            speedRef={speedMultiplierRef}
-          />
+          <ScrollingRow key={i} index={i} phase={phase} speedRef={speedRef} />
         )
       )}
-
       <HighlightedName phase={phase} />
     </motion.div>
   );

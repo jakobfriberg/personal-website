@@ -44,3 +44,8 @@
     font-family: var(--font-sans);
   }
 }
+
+/* Marquee helper */
+.marquee-half {
+  flex-shrink: 0;
+}
