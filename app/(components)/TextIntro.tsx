@@ -10,7 +10,7 @@ const CONFIG = {
   letterSpacing: '0.08em',
 
   // How many seconds one full scroll cycle takes (lower = faster)
-  scrollSpeed: 120,
+  scrollSpeed: 150,
 
   // Mouse at top of screen = fast, bottom = slow
   speedAtTop: 1.0,
@@ -147,28 +147,47 @@ function MiddleRow({
     const anim = animRef.current;
     if (!el || !anim) return;
 
+    // Freeze at current position
     anim.pause();
     const matrix = new DOMMatrix(getComputedStyle(el).transform);
     const currentX = matrix.m41;
     anim.cancel();
+
+    // Apply position directly to DOM so we can measure immediately
+    el.style.transform = `translateX(${currentX}px)`;
+
+    // Find closest name span to viewport center
+    const center = window.innerWidth / 2;
+    const spans = el.querySelectorAll<HTMLSpanElement>('[data-name]');
+    let closest: HTMLSpanElement | undefined;
+    let minDist = Infinity;
+
+    spans.forEach((span) => {
+      const rect = span.getBoundingClientRect();
+      const dist = Math.abs(rect.left + rect.width / 2 - center);
+      if (dist < minDist) { minDist = dist; closest = span; }
+    });
+
+    if (!closest) return;
+    const r = closest.getBoundingClientRect();
+    const targetX = currentX + (center - (r.left + r.width / 2));
+
+    // Fade out all names except the closest one
+    spans.forEach((span) => {
+      if (span === closest) {
+        span.style.opacity = '1';
+      } else {
+        span.style.transition = 'opacity 0.6s ease';
+        span.style.opacity = '0.08';
+      }
+    });
+
+    // Hand off to framer-motion and animate
     x.set(currentX);
     setLocked(true);
 
     requestAnimationFrame(() => {
-      const center = window.innerWidth / 2;
-      const spans = el.querySelectorAll<HTMLSpanElement>('[data-name]');
-      let closest: HTMLSpanElement | undefined;
-      let minDist = Infinity;
-
-      spans.forEach((span) => {
-        const rect = span.getBoundingClientRect();
-        const dist = Math.abs(rect.left + rect.width / 2 - center);
-        if (dist < minDist) { minDist = dist; closest = span; }
-      });
-
-      if (!closest) return;
-      const r = closest.getBoundingClientRect();
-      animate(x, x.get() + (center - (r.left + r.width / 2)), {
+      animate(x, targetX, {
         duration: CONFIG.lockDuration / 1000,
         ease: LOCK_EASE,
       });
@@ -196,33 +215,6 @@ function MiddleRow({
         <span className="marquee-half" aria-hidden="true">{content}</span>
       </motion.div>
     </div>
-  );
-}
-
-// ── HighlightedName overlay ──
-function HighlightedName({ phase }: { phase: Phase }) {
-  const show = phase === 'highlighted' || phase === 'fading';
-
-  return (
-    <motion.div
-      className="fixed inset-0 z-10 flex items-center justify-center pointer-events-none"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: show ? 1 : 0 }}
-      transition={{ duration: 0.4 }}
-    >
-      <span
-        className="select-none font-display"
-        style={{
-          fontSize: `calc(100vh / ${CONFIG.rows})`,
-          lineHeight: '1.1',
-          letterSpacing: CONFIG.letterSpacing,
-          fontWeight: CONFIG.fontWeight,
-          color: 'var(--foreground)',
-        }}
-      >
-        <NameText />
-      </span>
-    </motion.div>
   );
 }
 
@@ -285,7 +277,6 @@ export default function TextIntro({ onComplete }: TextIntroProps) {
           <ScrollingRow key={i} index={i} phase={phase} speedRef={speedRef} />
         )
       )}
-      <HighlightedName phase={phase} />
     </motion.div>
   );
 }
