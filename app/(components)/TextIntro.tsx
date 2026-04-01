@@ -5,43 +5,71 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 // ── Config ──────────────────────────────────────────────────────────
 const CONFIG = {
-  rows: 7,                     // number of text rows
-  fontWeight: 900,             // text thickness (100–900)
+  rows: 7,
+  fontWeight: 900,
   letterSpacing: '0.08em',
+  scrollSpeed: 150,             // seconds per full scroll cycle (lower = faster)
+  speedVariation: 0.3,          // max speed difference between rows (0.3 = ±30%)
 
-  // How many seconds one full scroll cycle takes (lower = faster)
-  scrollSpeed: 150,
-
-  // Mouse at top of screen = fast, bottom = slow
   speedAtTop: 1.0,
   speedAtBottom: 0.3,
-  speedSmoothing: 0.03,        // how gradually speed changes (lower = smoother)
+  speedSmoothing: 0.03,         // lower = more inertia
 
-  // Timing after click/scroll (ms) — controls the lock → highlight → fade sequence
-  lockDuration: 1200,          // slide animation
-  highlightAt: 1300,           // when the name highlights
-  fadeAt: 2100,                // when intro starts fading
-  doneAt: 2900,                // when main page appears
+  // ms after interaction — controls the lock → fade sequence
+  lockDuration: 1200,
+  highlightAt: 1300,
+  fadeAt: 2100,
+  doneAt: 2900,
 };
 
-// ── Derived constants (don't edit) ──────────────────────────────────
+// ── Derived ─────────────────────────────────────────────────────────
 const MIDDLE_ROW = Math.floor(CONFIG.rows / 2);
 const COPIES = 20;
-
 const LOCK_EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
+
+// Per-row duration using golden ratio spacing to avoid sync
+function rowDuration(index: number) {
+  const phi = (1 + Math.sqrt(5)) / 2;
+  const t = ((index * phi) % 1);  // 0–1, evenly distributed but non-repeating
+  const offset = (t - 0.5) * 2 * CONFIG.speedVariation; // map to ±speedVariation
+  return CONFIG.scrollSpeed * (1 + offset);
+}
+
+const TEXT_STYLE = {
+  fontSize: `calc(100vh / ${CONFIG.rows})`,
+  lineHeight: '1.1' as const,
+  letterSpacing: CONFIG.letterSpacing,
+  fontWeight: CONFIG.fontWeight,
+};
 
 type Phase = 'scrolling' | 'locking' | 'highlighted' | 'fading';
 
-interface TextIntroProps {
-  onComplete: () => void;
-}
+// ── Utilities ───────────────────────────────────────────────────────
 
-// ── Name with data-eck span for future glow effects ──
 function NameText() {
   return <>Jakob <span data-eck>Eck</span> Friberg </>;
 }
 
-// ── Web Animations API marquee with playbackRate control ──
+function findClosestSpan(container: HTMLElement) {
+  const center = window.innerWidth / 2;
+  const spans = container.querySelectorAll<HTMLSpanElement>('[data-name]');
+  let closest: HTMLSpanElement | undefined;
+  let minDist = Infinity;
+
+  spans.forEach((span) => {
+    const rect = span.getBoundingClientRect();
+    const dist = Math.abs(rect.left + rect.width / 2 - center);
+    if (dist < minDist) { minDist = dist; closest = span; }
+  });
+
+  if (!closest) return null;
+
+  const r = closest.getBoundingClientRect();
+  return { span: closest, offset: center - (r.left + r.width / 2), allSpans: spans };
+}
+
+// ── Hooks ───────────────────────────────────────────────────────────
+
 function useMarqueeAnimation(
   elRef: React.RefObject<HTMLDivElement | null>,
   duration: number,
@@ -81,7 +109,37 @@ function useMarqueeAnimation(
   return animRef;
 }
 
-// ── ScrollingRow ──
+function useMouseSpeed() {
+  const speedRef = useRef(1);
+  const targetRef = useRef(1);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const t = Math.max(0, Math.min(1, e.clientY / window.innerHeight));
+      targetRef.current = CONFIG.speedAtTop + t * (CONFIG.speedAtBottom - CONFIG.speedAtTop);
+    };
+    window.addEventListener('mousemove', handler);
+    return () => window.removeEventListener('mousemove', handler);
+  }, []);
+
+  useAnimationFrame(() => {
+    speedRef.current += (targetRef.current - speedRef.current) * CONFIG.speedSmoothing;
+  });
+
+  return speedRef;
+}
+
+function useInteractionTrigger(callback: () => void) {
+  useEffect(() => {
+    const handler = () => callback();
+    const events = ['click', 'wheel', 'keydown', 'touchstart'] as const;
+    events.forEach((e) => window.addEventListener(e, handler));
+    return () => events.forEach((e) => window.removeEventListener(e, handler));
+  }, [callback]);
+}
+
+// ── Row components ──────────────────────────────────────────────────
+
 function ScrollingRow({
   index, phase, speedRef,
 }: {
@@ -92,7 +150,7 @@ function ScrollingRow({
   const rowRef = useRef<HTMLDivElement>(null);
   const isReverse = index % 2 !== 0;
   const isPostScroll = phase !== 'scrolling';
-  const duration = CONFIG.scrollSpeed + index * 5;
+  const duration = rowDuration(index);
 
   useMarqueeAnimation(rowRef, duration, isReverse, speedRef, !isPostScroll);
 
@@ -105,12 +163,7 @@ function ScrollingRow({
       <motion.div
         ref={rowRef}
         className="inline-flex whitespace-nowrap select-none font-display"
-        style={{
-          fontSize: `calc(100vh / ${CONFIG.rows})`,
-          lineHeight: '1.1',
-          letterSpacing: CONFIG.letterSpacing,
-          fontWeight: CONFIG.fontWeight,
-        }}
+        style={TEXT_STYLE}
         animate={{ opacity: isPostScroll ? 0.08 : 1 }}
         transition={{ opacity: { duration: 0.6 } }}
       >
@@ -121,7 +174,6 @@ function ScrollingRow({
   );
 }
 
-// ── MiddleRow ──
 function MiddleRow({
   phase, speedRef,
 }: {
@@ -130,9 +182,7 @@ function MiddleRow({
 }) {
   const rowRef = useRef<HTMLDivElement>(null);
   const isReverse = MIDDLE_ROW % 2 !== 0;
-  const duration = CONFIG.scrollSpeed + MIDDLE_ROW * 5;
-  const phaseRef = useRef(phase);
-  phaseRef.current = phase;
+  const duration = rowDuration(MIDDLE_ROW);
   const x = useMotionValue(0);
   const [locked, setLocked] = useState(false);
 
@@ -147,33 +197,20 @@ function MiddleRow({
     const anim = animRef.current;
     if (!el || !anim) return;
 
-    // Freeze at current position
+    // Capture position before canceling — Web Animations API removes
+    // the transform on cancel, so we must read it first and reapply
     anim.pause();
     const matrix = new DOMMatrix(getComputedStyle(el).transform);
     const currentX = matrix.m41;
     anim.cancel();
-
-    // Apply position directly to DOM so we can measure immediately
     el.style.transform = `translateX(${currentX}px)`;
 
-    // Find closest name span to viewport center
-    const center = window.innerWidth / 2;
-    const spans = el.querySelectorAll<HTMLSpanElement>('[data-name]');
-    let closest: HTMLSpanElement | undefined;
-    let minDist = Infinity;
+    const result = findClosestSpan(el);
+    if (!result) return;
 
-    spans.forEach((span) => {
-      const rect = span.getBoundingClientRect();
-      const dist = Math.abs(rect.left + rect.width / 2 - center);
-      if (dist < minDist) { minDist = dist; closest = span; }
-    });
+    const { span: closest, offset, allSpans } = result;
 
-    if (!closest) return;
-    const r = closest.getBoundingClientRect();
-    const targetX = currentX + (center - (r.left + r.width / 2));
-
-    // Fade out all names except the closest one
-    spans.forEach((span) => {
+    allSpans.forEach((span) => {
       if (span === closest) {
         span.style.opacity = '1';
       } else {
@@ -182,7 +219,9 @@ function MiddleRow({
       }
     });
 
-    // Hand off to framer-motion and animate
+    // Switch from Web Animation to framer-motion so we can animate
+    // to the computed center position with easing
+    const targetX = currentX + offset;
     x.set(currentX);
     setLocked(true);
 
@@ -203,13 +242,7 @@ function MiddleRow({
       <motion.div
         ref={rowRef}
         className="inline-flex whitespace-nowrap select-none font-display"
-        style={{
-          ...(locked ? { x } : {}),
-          fontSize: `calc(100vh / ${CONFIG.rows})`,
-          lineHeight: '1.1',
-          letterSpacing: CONFIG.letterSpacing,
-          fontWeight: CONFIG.fontWeight,
-        }}
+        style={{ ...(locked ? { x } : {}), ...TEXT_STYLE }}
       >
         <span className="marquee-half">{content}</span>{'\u00A0'}
         <span className="marquee-half" aria-hidden="true">{content}</span>
@@ -218,30 +251,18 @@ function MiddleRow({
   );
 }
 
-// ── Main component ──
+// ── Main component ──────────────────────────────────────────────────
+
+interface TextIntroProps {
+  onComplete: () => void;
+}
+
 export default function TextIntro({ onComplete }: TextIntroProps) {
   const [phase, setPhase] = useState<Phase>('scrolling');
   const hasInteracted = useRef(false);
   const timersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
-  const speedRef = useRef(1);
-  const targetSpeedRef = useRef(1);
+  const speedRef = useMouseSpeed();
 
-  // Mouse Y → speed: top = fast, bottom = slow
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      const t = Math.max(0, Math.min(1, e.clientY / window.innerHeight));
-      targetSpeedRef.current = CONFIG.speedAtTop + t * (CONFIG.speedAtBottom - CONFIG.speedAtTop);
-    };
-    window.addEventListener('mousemove', handler);
-    return () => window.removeEventListener('mousemove', handler);
-  }, []);
-
-  // Smooth speed toward target
-  useAnimationFrame(() => {
-    speedRef.current += (targetSpeedRef.current - speedRef.current) * CONFIG.speedSmoothing;
-  });
-
-  // Any interaction triggers the lock → highlight → fade → done sequence
   const triggerLock = useCallback(() => {
     if (hasInteracted.current) return;
     hasInteracted.current = true;
@@ -254,12 +275,7 @@ export default function TextIntro({ onComplete }: TextIntroProps) {
     ];
   }, [onComplete]);
 
-  useEffect(() => {
-    const handler = () => triggerLock();
-    const events = ['click', 'wheel', 'keydown', 'touchstart'] as const;
-    events.forEach((e) => window.addEventListener(e, handler));
-    return () => events.forEach((e) => window.removeEventListener(e, handler));
-  }, [triggerLock]);
+  useInteractionTrigger(triggerLock);
 
   useEffect(() => () => timersRef.current.forEach(clearTimeout), []);
 
