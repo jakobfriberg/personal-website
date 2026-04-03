@@ -39,7 +39,7 @@
   }
 
   body {
-    background-color: var(--background);
+    background-color: #35383B;
     color: var(--foreground);
     font-family: var(--font-sans);
   }
@@ -48,4 +48,13 @@
 /* Marquee helper */
 .marquee-half {
   flex-shrink: 0;
+}
+
+/* Main content background with subtle grid */
+.bg-main-grid {
+  background-color: #35383B;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 32px 32px;
 }

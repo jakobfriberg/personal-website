@@ -282,7 +282,7 @@ export default function TextIntro({ onComplete }: TextIntroProps) {
   return (
     <motion.div
       className="fixed inset-0 z-50 flex flex-col overflow-hidden"
-      style={{ backgroundColor: 'var(--background)' }}
+      style={{ backgroundColor: '#35383B', color: '#ffffff' }}
       animate={{ opacity: phase === 'fading' ? 0 : 1 }}
       transition={{ duration: 0.8, ease: 'easeInOut' }}
     >
