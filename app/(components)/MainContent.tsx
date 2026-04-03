@@ -7,11 +7,15 @@ import { GEAR_CONFIG } from '@/app/config/gear';
 
 import CardCarousel from './CardCarousel';
 import GearDebug, { GEAR_DEFAULTS, type GearValues } from './GearDebug';
+import ThingySvg from './ThingySvg';
+
+const THINGY_DEFAULTS = { top: 51.15, left: -4.78, scale: 0.87 };
 
 const CARDS_COUNT = 9;
 
 export default function MainContent() {
   const [gear, setGear] = useState(GEAR_DEFAULTS);
+  const [thingy, setThingy] = useState(THINGY_DEFAULTS);
   const [activeIndex, setActiveIndex] = useState(0);
 
   const handleGearChange = useCallback(
@@ -30,6 +34,7 @@ export default function MainContent() {
 
   const lgAngle = activeIndex * GEAR_CONFIG.degreesPerCard;
   const smAngle = -lgAngle * gear.gearRatio;
+  const thingyTrackAngle = GEAR_CONFIG.thingyAngles[activeIndex] ?? 0;
 
   return (
     <motion.div
@@ -80,6 +85,19 @@ export default function MainContent() {
         />
       </div>
 
+      {/* z-[0]: Thingy — bottom left, behind gears */}
+      <div
+        className="absolute z-[0]"
+        style={{
+          top: `${thingy.top}%`,
+          left: `${thingy.left}%`,
+          transform: `scale(${thingy.scale})`,
+          transformOrigin: 'top left',
+        }}
+      >
+        <ThingySvg trackRotation={thingyTrackAngle} />
+      </div>
+
       {/* z-[2]: Grid edge fade */}
       <div className="absolute inset-0 pointer-events-none z-[2] flex items-center justify-center">
         <div
@@ -106,7 +124,11 @@ export default function MainContent() {
       </div>
 
       {/* Debug panel — remove when done */}
-      <GearDebug onChange={handleGearChange} />
+      <GearDebug
+        onChange={handleGearChange}
+        thingy={thingy}
+        onThingyChange={setThingy}
+      />
     </motion.div>
   );
 }

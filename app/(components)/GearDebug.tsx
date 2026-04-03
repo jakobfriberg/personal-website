@@ -81,10 +81,20 @@ function Slider({
   );
 }
 
+export interface ThingyValues {
+  top: number;
+  left: number;
+  scale: number;
+}
+
 export default function GearDebug({
   onChange,
+  thingy,
+  onThingyChange,
 }: {
   onChange: (values: GearValues) => void;
+  thingy: ThingyValues;
+  onThingyChange: (values: ThingyValues) => void;
 }) {
   const [pos, setPos] = useState(GEAR_DEFAULTS);
 
@@ -97,6 +107,13 @@ export default function GearDebug({
     [pos, onChange],
   );
 
+  const updateThingy = useCallback(
+    (key: keyof ThingyValues, value: number) => {
+      onThingyChange({ ...thingy, [key]: value });
+    },
+    [thingy, onThingyChange],
+  );
+
   const copyValues = () => {
     const text = [
       `lgTop: ${pos.lgTop},`,
@@ -105,6 +122,9 @@ export default function GearDebug({
       `smTop: ${pos.smTop},`,
       `smLeft: ${pos.smLeft},`,
       `smScale: ${pos.smScale},`,
+      `thingyTop: ${thingy.top},`,
+      `thingyLeft: ${thingy.left},`,
+      `thingyScale: ${thingy.scale},`,
     ].join('\n');
     navigator.clipboard.writeText(text);
   };
@@ -130,6 +150,11 @@ export default function GearDebug({
       <Slider label="top" value={pos.smTop} unit="%" sensitivity={0.2} onChange={(v) => update('smTop', v)} />
       <Slider label="left" value={pos.smLeft} unit="%" sensitivity={0.2} onChange={(v) => update('smLeft', v)} />
       <Slider label="scale" value={pos.smScale} unit="x" sensitivity={0.005} onChange={(v) => update('smScale', v)} />
+
+      <div className="text-[10px] text-white/40 mt-2 mb-1">Thingy</div>
+      <Slider label="top" value={thingy.top} unit="%" sensitivity={0.2} onChange={(v) => updateThingy('top', v)} />
+      <Slider label="left" value={thingy.left} unit="%" sensitivity={0.2} onChange={(v) => updateThingy('left', v)} />
+      <Slider label="scale" value={thingy.scale} unit="x" sensitivity={0.005} onChange={(v) => updateThingy('scale', v)} />
     </div>
   );
 }

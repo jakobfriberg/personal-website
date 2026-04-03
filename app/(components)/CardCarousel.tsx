@@ -2,6 +2,8 @@
 
 import { motion } from 'framer-motion';
 
+import { GEAR_CONFIG } from '@/app/config/gear';
+
 // ── Config ──────────────────────────────────────────────────────────
 
 const CARD_SPREAD = 20;        // px between stacked cards
@@ -110,9 +112,9 @@ export default function CardCarousel({
                 zIndex: transform.zIndex,
               }}
               transition={{
-                type: 'spring',
-                stiffness: 300,
-                damping: 30,
+                type: 'tween',
+                duration: GEAR_CONFIG.transitionDuration,
+                ease: GEAR_CONFIG.transitionEasing,
               }}
             >
               <Card card={card} isActive={i === activeIndex} />

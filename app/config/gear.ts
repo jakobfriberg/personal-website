@@ -15,8 +15,13 @@ export const GEAR_CONFIG = {
   // Rotation
   gearRatio: TOOTH_RATIO,
   degreesPerCard: 30,
-  transitionDuration: 2.0,
-  transitionEasing: 'ease',
+  transitionDuration: 1.0,
+  transitionEasing: 'linear',
+
+  // Thingy track rotation — one angle per card index (9 cards)
+  thingyAngles: [0, -2, -4, -7, -10, -13, -16, -20, -24] as readonly number[],
+  thingyTransitionDuration: 1.0,
+  thingyTransitionEasing: 'linear',
 } as const;
 
 export type GearConfig = typeof GEAR_CONFIG;
