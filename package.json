@@ -10,9 +10,11 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@mdi/js": "^7.4.47",
     "@tailwindcss/postcss": "^4.1.16",
     "framer-motion": "^12.38.0",
     "next": "^16.0.1",
+    "planck": "^1.4.2",
     "react": "^19.2.3",
     "react-dom": "^19.2.3"
   },

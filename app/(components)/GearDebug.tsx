@@ -46,7 +46,7 @@ function Slider({
       dragging.current = true;
       startX.current = e.clientX;
       startVal.current = value;
-      (e.target as HTMLElement).setPointerCapture(e.pointerId);
+      e.currentTarget.setPointerCapture(e.pointerId);
     },
     [value],
   );
@@ -91,10 +91,14 @@ export default function GearDebug({
   onChange,
   thingy,
   onThingyChange,
+  bgGear,
+  onBgGearChange,
 }: {
   onChange: (values: GearValues) => void;
   thingy: ThingyValues;
   onThingyChange: (values: ThingyValues) => void;
+  bgGear: ThingyValues;
+  onBgGearChange: (values: ThingyValues) => void;
 }) {
   const [pos, setPos] = useState(GEAR_DEFAULTS);
 
@@ -114,6 +118,13 @@ export default function GearDebug({
     [thingy, onThingyChange],
   );
 
+  const updateBgGear = useCallback(
+    (key: keyof ThingyValues, value: number) => {
+      onBgGearChange({ ...bgGear, [key]: value });
+    },
+    [bgGear, onBgGearChange],
+  );
+
   const copyValues = () => {
     const text = [
       `lgTop: ${pos.lgTop},`,
@@ -125,6 +136,9 @@ export default function GearDebug({
       `thingyTop: ${thingy.top},`,
       `thingyLeft: ${thingy.left},`,
       `thingyScale: ${thingy.scale},`,
+      `bgGearTop: ${bgGear.top},`,
+      `bgGearLeft: ${bgGear.left},`,
+      `bgGearScale: ${bgGear.scale},`,
     ].join('\n');
     navigator.clipboard.writeText(text);
   };
@@ -155,6 +169,11 @@ export default function GearDebug({
       <Slider label="top" value={thingy.top} unit="%" sensitivity={0.2} onChange={(v) => updateThingy('top', v)} />
       <Slider label="left" value={thingy.left} unit="%" sensitivity={0.2} onChange={(v) => updateThingy('left', v)} />
       <Slider label="scale" value={thingy.scale} unit="x" sensitivity={0.005} onChange={(v) => updateThingy('scale', v)} />
+
+      <div className="text-[10px] text-white/40 mt-2 mb-1">Bg gear</div>
+      <Slider label="top" value={bgGear.top} unit="%" sensitivity={0.2} onChange={(v) => updateBgGear('top', v)} />
+      <Slider label="left" value={bgGear.left} unit="%" sensitivity={0.2} onChange={(v) => updateBgGear('left', v)} />
+      <Slider label="scale" value={bgGear.scale} unit="x" sensitivity={0.005} onChange={(v) => updateBgGear('scale', v)} />
     </div>
   );
 }

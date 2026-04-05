@@ -3,13 +3,17 @@
 import { motion } from 'framer-motion';
 import { useCallback, useState } from 'react';
 
-import { GEAR_CONFIG } from '@/app/config/gear';
+import { DEBUG, GEAR_CONFIG } from '@/app/config/gear';
 
-import CardCarousel from './CardCarousel';
+import CardCarousel, { CARDS } from './CardCarousel';
 import GearDebug, { GEAR_DEFAULTS, type GearValues } from './GearDebug';
+import MechanicalCounter from './MechanicalCounter';
+import PersonalPanel from './PersonalPanel';
+import PullLever from './PullLever';
 import ThingySvg from './ThingySvg';
 
 const THINGY_DEFAULTS = { top: 51.15, left: -4.78, scale: 0.87 };
+const BG_GEAR_DEFAULTS = { top: 20, left: -20, scale: 2.0 };
 
 const CARDS_COUNT = 9;
 
@@ -17,6 +21,7 @@ export default function MainContent() {
   const [gear, setGear] = useState(GEAR_DEFAULTS);
   const [thingy, setThingy] = useState(THINGY_DEFAULTS);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [bgGear, setBgGear] = useState(BG_GEAR_DEFAULTS);
 
   const handleGearChange = useCallback(
     (values: GearValues) => setGear(values),
@@ -63,6 +68,19 @@ export default function MainContent() {
             transition: `transform ${GEAR_CONFIG.transitionDuration}s ${GEAR_CONFIG.transitionEasing}`,
           }}
         />
+        {/* Knob — centered on gear, doesn't rotate */}
+        <img
+          src="/knob.svg"
+          alt=""
+          width={120}
+          height={120}
+          className="absolute z-10"
+          style={{
+            top: 300 - 60,
+            left: 300 - 60,
+            transform: 'rotate(13deg)',
+          }}
+        />
       </div>
       <div
         className="absolute z-[1]"
@@ -85,6 +103,25 @@ export default function MainContent() {
         />
       </div>
 
+      {/* z-[-1]: Background gear — muted grid-color strokes, solid bg fill */}
+      <div
+        className="absolute z-[-1]"
+        style={{
+          top: `${bgGear.top}%`,
+          left: `${bgGear.left}%`,
+          transform: `scale(${bgGear.scale})`,
+          transformOrigin: 'top left',
+        }}
+      >
+        <img
+          src="/large-gear-bg.svg"
+          alt=""
+          width={600}
+          height={600}
+          style={{ animation: 'slow-spin 120s linear infinite' }}
+        />
+      </div>
+
       {/* z-[0]: Thingy — bottom left, behind gears */}
       <div
         className="absolute z-[0]"
@@ -96,6 +133,21 @@ export default function MainContent() {
         }}
       >
         <ThingySvg trackRotation={thingyTrackAngle} />
+      </div>
+
+      {/* z-[5]: Pull levers — right side, hanging from top */}
+      <div className="absolute inset-0 z-[5] flex justify-end gap-24 pointer-events-none" style={{ paddingRight: 240, top: -120 }}>
+        <PullLever
+          direction="prev"
+          onClick={prev}
+          disabled={activeIndex === 0}
+          hidden={activeIndex === 0}
+        />
+        <PullLever
+          direction="next"
+          onClick={next}
+          disabled={activeIndex === CARDS_COUNT - 1}
+        />
       </div>
 
       {/* z-[2]: Grid edge fade */}
@@ -112,23 +164,32 @@ export default function MainContent() {
         />
       </div>
 
-      {/* z-[3]: Cards */}
+      {/* z-[3]: Counter + Cards */}
       <div className="relative z-[3] flex h-full flex-col items-center justify-center">
-        <div className="w-full max-w-[1440px] px-8">
-          <CardCarousel
-            activeIndex={activeIndex}
-            onPrev={prev}
-            onNext={next}
+        <div className="relative z-20">
+          <MechanicalCounter
+            index={activeIndex}
+            title={CARDS[activeIndex].title}
           />
+        </div>
+        <div className="-mt-4 w-full max-w-[1440px] px-8">
+          <CardCarousel activeIndex={activeIndex} />
         </div>
       </div>
 
-      {/* Debug panel — remove when done */}
-      <GearDebug
-        onChange={handleGearChange}
-        thingy={thingy}
-        onThingyChange={setThingy}
-      />
+      {/* z-[4]: Personal panel — bottom right */}
+      <PersonalPanel />
+
+      {/* Debug panel */}
+      {DEBUG && (
+        <GearDebug
+          onChange={handleGearChange}
+          thingy={thingy}
+          onThingyChange={setThingy}
+          bgGear={bgGear}
+          onBgGearChange={setBgGear}
+        />
+      )}
     </motion.div>
   );
 }
