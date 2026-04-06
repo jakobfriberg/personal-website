@@ -284,7 +284,7 @@ export function useVerletRope(options: RopeOptions) {
     if (bodies.length === 0) return;
     const handle = bodies[bodies.length - 1];
     handle.applyLinearImpulse(
-      planck.Vec2(0, -0.8),
+      planck.Vec2(0, -3.6),
       handle.getWorldCenter(),
       true,
     );

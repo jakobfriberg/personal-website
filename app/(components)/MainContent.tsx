@@ -132,7 +132,7 @@ export default function MainContent() {
       </div>
 
       {/* z-[5]: Pull levers — right side, hanging from top */}
-      <div className="absolute inset-0 z-[5] flex justify-end gap-24 pointer-events-none" style={{ paddingRight: 240, top: -120 }}>
+      <div className="absolute inset-0 z-[5] flex justify-end gap-24 pointer-events-none" style={{ paddingRight: 240, top: -200 }}>
         <PullLever
           direction="prev"
           onClick={prev}

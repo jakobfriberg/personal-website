@@ -5,10 +5,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useVerletRope } from '@/app/hooks/use-verlet-rope';
 
 const SEGMENT_COUNT = 8;
-const SEGMENT_LENGTH = 42;   // ~339px total rope
-const HANDLE_WIDTH = 33;
-const HANDLE_HEIGHT = 139;
-const SVG_WIDTH = 140;        // extra width for swing room
+const SEGMENT_LENGTH = 60;   // ~480px total rope
+const HANDLE_WIDTH = 50;
+const HANDLE_HEIGHT = 210;
+const SVG_WIDTH = 210;        // extra width for swing room
 const ROPE_LENGTH = SEGMENT_COUNT * SEGMENT_LENGTH;
 const NOTE_OFFSET = 10;       // px from handle bottom to note hole
 const SVG_HEIGHT = ROPE_LENGTH + HANDLE_HEIGHT + NOTE_OFFSET + 160;
