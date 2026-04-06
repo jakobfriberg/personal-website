@@ -1,0 +1,2 @@
+- Have a crank in the background with pistons or something running.
+- Be able to crank up settings in some kind of engine panel how e.g. fast the engine is running. This will speed up the pistons and the wheel. If you max it it starts to go wild and warn that the engine is overloading.
