@@ -1,7 +1,7 @@
 // Exact tooth count ratio — independent of visual scaling
 const TOOTH_RATIO = 53 / 15; // ≈ 3.5333...
 
-export const DEBUG = true;
+export const DEBUG = false;
 
 export const GEAR_CONFIG = {
   // Large gear position & scale
