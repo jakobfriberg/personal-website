@@ -1,7 +1,7 @@
 // Exact tooth count ratio — independent of visual scaling
 const TOOTH_RATIO = 53 / 15; // ≈ 3.5333...
 
-export const DEBUG = false;
+export const DEBUG = true;
 
 export const GEAR_CONFIG = {
   // Large gear position & scale
@@ -30,3 +30,4 @@ export type GearConfig = typeof GEAR_CONFIG;
 
 export const THINGY_DEFAULTS = { top: 51.15, left: -4.78, scale: 0.87 };
 export const BG_GEAR_DEFAULTS = { top: 20, left: -20, scale: 2.0 };
+export const MOTOR_DEFAULTS = { top: 67.72, left: 41.71, scale: 1.34 };

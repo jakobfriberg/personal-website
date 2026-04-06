@@ -3,12 +3,13 @@
 import { motion } from 'framer-motion';
 import { useCallback, useState } from 'react';
 
-import { BG_GEAR_DEFAULTS, DEBUG, GEAR_CONFIG, THINGY_DEFAULTS } from '@/app/config/gear';
+import { BG_GEAR_DEFAULTS, DEBUG, GEAR_CONFIG, MOTOR_DEFAULTS, THINGY_DEFAULTS } from '@/app/config/gear';
 import { CARDS } from '@/app/data/cards';
 
 import GearDebug, { GEAR_DEFAULTS, type GearValues } from './debug/GearDebug';
 import CardCarousel from './gear/CardCarousel';
 import MechanicalCounter from './gear/MechanicalCounter';
+import MotorSvg from './gear/MotorSvg';
 import ThingySvg from './gear/ThingySvg';
 import PersonalPanel from './interaction/PersonalPanel';
 import PullLever from './interaction/PullLever';
@@ -18,6 +19,7 @@ export default function MainContent() {
   const [thingy, setThingy] = useState(THINGY_DEFAULTS);
   const [activeIndex, setActiveIndex] = useState(0);
   const [bgGear, setBgGear] = useState(BG_GEAR_DEFAULTS);
+  const [motor, setMotor] = useState(MOTOR_DEFAULTS);
 
   const handleGearChange = useCallback(
     (values: GearValues) => setGear(values),
@@ -118,6 +120,19 @@ export default function MainContent() {
         />
       </div>
 
+      {/* z-[-1]: Motor with gear — drives the background gear */}
+      <div
+        className="absolute z-[-1]"
+        style={{
+          top: `${motor.top}%`,
+          left: `${motor.left}%`,
+          transform: `scale(${motor.scale})`,
+          transformOrigin: 'top left',
+        }}
+      >
+        <MotorSvg spinDuration={120 / GEAR_CONFIG.gearRatio} />
+      </div>
+
       {/* z-[0]: Thingy — bottom left, behind gears */}
       <div
         className="absolute z-[0]"
@@ -184,6 +199,8 @@ export default function MainContent() {
           onThingyChange={setThingy}
           bgGear={bgGear}
           onBgGearChange={setBgGear}
+          motor={motor}
+          onMotorChange={setMotor}
         />
       )}
     </motion.div>

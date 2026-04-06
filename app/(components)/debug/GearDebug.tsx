@@ -38,12 +38,16 @@ export default function GearDebug({
   onThingyChange,
   bgGear,
   onBgGearChange,
+  motor,
+  onMotorChange,
 }: {
   onChange: (values: GearValues) => void;
   thingy: ThingyValues;
   onThingyChange: (values: ThingyValues) => void;
   bgGear: ThingyValues;
   onBgGearChange: (values: ThingyValues) => void;
+  motor: ThingyValues;
+  onMotorChange: (values: ThingyValues) => void;
 }) {
   const [pos, setPos] = useState(GEAR_DEFAULTS);
 
@@ -81,6 +85,12 @@ export default function GearDebug({
           title: 'Bg gear',
           values: bgGear as unknown as Record<string, number>,
           onChange: (v) => onBgGearChange(v as unknown as ThingyValues),
+          sliders: tpsSliders,
+        },
+        {
+          title: 'Motor',
+          values: motor as unknown as Record<string, number>,
+          onChange: (v) => onMotorChange(v as unknown as ThingyValues),
           sliders: tpsSliders,
         },
       ]}
