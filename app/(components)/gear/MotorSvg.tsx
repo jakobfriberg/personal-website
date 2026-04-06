@@ -3,23 +3,23 @@
 import { useEffect, useRef } from 'react';
 
 // ── Geometry constants (from SVG) ───────────────────────────────────
-const GEAR_CENTER = { x: 179.5, y: 178.5 };
-const CRANK_RADIUS = 63; // gear center → attached-hole
+const GEAR_CENTER = { x: 180, y: 178 };
+const CRANK_RADIUS = 64; // gear center → attached-hole
 
-// At rest (gear angle 0), crank pin is at the TOP joint
-const CRANK_REST = { x: 179.5, y: 115.5 };
+// At rest (gear angle 0), crank pin is to the RIGHT of gear center
+const CRANK_REST = { x: 244, y: 178 };
 
 // Wrist pin (bolt-piston) — where linkage meets the piston
-const WRIST_REST = { x: 406, y: 116 };
+const WRIST_REST = { x: 470, y: 178 };
 
 // Connecting rod length (crank pin → wrist pin at rest)
-const ROD_LENGTH = WRIST_REST.x - CRANK_REST.x; // ~316px
+const ROD_LENGTH = WRIST_REST.x - CRANK_REST.x; // ~226px
 
 // Linkage anchor (bolt-gear position at rest)
-const LINKAGE_ANCHOR = { x: 180, y: 116 };
+const LINKAGE_ANCHOR = { x: 244, y: 178 };
 
 // Piston slides along this fixed Y
-const PISTON_Y = 116;
+const PISTON_Y = 178;
 
 export default function MotorSvg({
   spinDuration,

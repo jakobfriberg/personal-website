@@ -1,7 +1,7 @@
 // Exact tooth count ratio — independent of visual scaling
 const TOOTH_RATIO = 53 / 15; // ≈ 3.5333...
 
-export const DEBUG = true;
+export const DEBUG = false;
 
 export const GEAR_CONFIG = {
   // Large gear position & scale
@@ -24,10 +24,13 @@ export const GEAR_CONFIG = {
   thingyProgress: [0.43, 0.41, 0.38, 0.34, 0.30, 0.25, 0.19, 0.12, 0] as readonly number[],
   thingyTransitionDuration: 1.0,
   thingyTransitionEasing: 'linear',
+
+  // Background gear / motor continuous spin
+  bgSpinDuration: 80, // seconds per full bg gear rotation
 } as const;
 
 export type GearConfig = typeof GEAR_CONFIG;
 
 export const THINGY_DEFAULTS = { top: 50.6, left: 1.92, scale: 0.87 };
 export const BG_GEAR_DEFAULTS = { top: 20, left: -20, scale: 2.0 };
-export const MOTOR_DEFAULTS = { top: 67.72, left: 41.71, scale: 1.34 };
+export const MOTOR_DEFAULTS = { top: 51.73, left: 41.59, scale: 1.4 };

@@ -18,7 +18,7 @@ export default function ThingySvg({
   const progressRef = useRef(trackProgress);
   progressRef.current = trackProgress;
 
-  const applyPosition = useCallback((progress: number) => {
+  const applyPosition = useCallback((progress: number, animate = true) => {
     const path = pathRef.current;
     const track = trackRef.current;
     const knob = knobRef.current;
@@ -33,7 +33,9 @@ export default function ThingySvg({
     const dy = point.y - center.y;
 
     const transform = `translate(${dx}px, ${dy}px)`;
-    const transition = `transform ${GEAR_CONFIG.thingyTransitionDuration}s ${GEAR_CONFIG.thingyTransitionEasing}`;
+    const transition = animate
+      ? `transform ${GEAR_CONFIG.thingyTransitionDuration}s ${GEAR_CONFIG.thingyTransitionEasing}`
+      : 'none';
 
     track.style.transform = transform;
     track.style.transition = transition;
@@ -75,8 +77,8 @@ export default function ThingySvg({
         // Hide the movement path
         path.style.display = 'none';
 
-        // Apply initial position
-        applyPosition(progressRef.current);
+        // Apply initial position instantly (no transition)
+        applyPosition(progressRef.current, false);
       });
   }, [applyPosition]);
 

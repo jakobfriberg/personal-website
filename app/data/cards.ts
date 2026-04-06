@@ -7,71 +7,65 @@ export interface CardData {
 export const CARDS: CardData[] = [
   {
     id: 0,
-    title: 'Who I am',
+    title: 'Hi there',
     content:
-      "Hey, I'm Jakob. I work at the intersection of product, " +
-      "engineering, and AI.\n" +
+      "I'm Jakob. I work at the intersection of product, " +
+      "engineering, and AI. " +
       "I like working on problems where the problem is clear, " +
       "but the solution isn't.",
   },
   {
     id: 1,
-    title: 'What I do',
+    title: 'Define...',
     content:
       'I help turn ideas, data, and messy processes into working ' +
       'software: a new product feature, an API, a data pipeline, ' +
-      'an internal tool.\n' +
+      'an internal tool. ' +
       'It usually starts with figuring out what the right thing ' +
       'to build is.',
   },
   {
     id: 2,
-    title: 'How I think',
+    title: '...to...',
     content:
-      'I think from the perspective of the user, the business, ' +
-      'and the technology at the same time.\n' +
-      'Most good solutions come from understanding how those ' +
-      'three fit together.',
+      'It comes down to three perspectives: the user, the ' +
+      'business, and the technology. When you understand how ' +
+      'they connect, the right solution tends to emerge.',
   },
   {
     id: 3,
-    title: 'What I build',
+    title: '...delight',
     content:
-      "I've worked in both small and large organizations, " +
-      'including Swish, SJ, PostNord, and 3M, often on early ' +
+      "That groundwork is what lets you build something that " +
+      "doesn't just work, but feels right to use. Something " +
+      "delightful. The thing that makes customers stay and " +
+      "spread the word."
+  },
+  {
+    id: 4,
+    title: 'So far',
+    content:
+      "I've worked in small and large organizations, " +
+      'including Swish, SJ, PostNord, and 3M. Often on early ' +
       'projects and new initiatives where things are still ' +
       'being figured out.',
   },
   {
-    id: 4,
-    title: 'How I work',
-    content:
-      'In the beginning of a project, learning is more important ' +
-      'than optimizing.\n' +
-      'I focus on understanding the problem, talking to users, ' +
-      'and building prototypes to see what works.\n' +
-      'I enjoy working with designers, product people, engineers, ' +
-      'and real users to shape the product.\n' +
-      "I like going from vague idea \u2192 first working version " +
-      "\u2192 real product.",
-  },
-  {
     id: 5,
-    title: 'What matters',
+    title: 'The process',
     content:
-      'I care about building things that are actually useful ' +
-      'and that feel good to use.\n' +
-      "Product value isn't only in solving the functional need, " +
-      'but also the emotional one.\n' +
-      "That's where delight lives.",
+      'Early in a project, learning matters more than ' +
+      'optimizing. I love talking to users, building ' +
+      'prototypes, and seeing what sticks. Trust the process ' +
+      'and you start to see glimpses of the right product.',
   },
   {
     id: 6,
-    title: 'Tech',
+    title: 'Tech stack',
     content:
-      "I'm fairly tech-agnostic and have worked with most things " +
-      'thrown at me: Python, TypeScript, FastAPI, Next.js, ' +
-      'Postgres, Supabase, GCP, and some Kubernetes.\n' +
+      "I'm tech-agnostic and work with most things " +
+      'thrown at me - Python, TypeScript, FastAPI, Next.js, ' +
+      'Postgres, Supabase, GCP. I\'ve even dabbled with Kubernetes. ' +
       'The tech is usually the easy part. Deciding what to ' +
       'build is not.',
   },
@@ -80,9 +74,9 @@ export const CARDS: CardData[] = [
     title: 'Background',
     content:
       'I started in materials science, which led me into data ' +
-      'and analytics, and later into product development and AI.\n' +
-      "One thing led to another. I've always just followed " +
-      'interesting technology.',
+      'and analytics, and later into product development and AI. ' +
+      "One thing has led to another but the common denominator has " +
+      'always been the pursuit to be at the bleeding edge of technology.',
   },
   {
     id: 8,

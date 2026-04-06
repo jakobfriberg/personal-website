@@ -9,7 +9,7 @@ import { GEAR_CONFIG } from '@/app/config/gear';
 // Space first so blank slots scroll to position 0.
 const CHAR_SET = [
   ' ',
-  ...'0123456789ABCDEGHIKLMNORSTUOW'.split('').filter(
+  ...'.0123456789ABCDEGFHIJKPLMNORSTUYOVW\''.split('').filter(
     (c, i, a) => a.indexOf(c) === i,
   ),
 ];
@@ -17,7 +17,7 @@ const CHAR_INDEX = new Map(CHAR_SET.map((c, i) => [c, i]));
 
 const CHAR_HEIGHT = 40; // px — height of one character cell
 const CHAR_WIDTH = 24;  // px — fixed width per slot
-const TITLE_SLOTS = 12; // longest title: "WHAT I BUILD"
+const TITLE_SLOTS = 13; // longest title: "WHAT I BUILD"
 
 // Match the full card stack width: 420px card + 8 offsets * 20px spread on each side
 const COUNTER_WIDTH = 420;

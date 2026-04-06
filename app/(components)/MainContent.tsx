@@ -117,7 +117,7 @@ export default function MainContent() {
           alt=""
           width={600}
           height={600}
-          style={{ animation: 'slow-spin 120s linear infinite' }}
+          style={{ animation: `slow-spin ${GEAR_CONFIG.bgSpinDuration}s linear infinite` }}
         />
       </div>
 
@@ -131,7 +131,7 @@ export default function MainContent() {
           transformOrigin: 'top left',
         }}
       >
-        <MotorSvg spinDuration={120 / GEAR_CONFIG.gearRatio} />
+        <MotorSvg spinDuration={GEAR_CONFIG.bgSpinDuration / GEAR_CONFIG.gearRatio} />
       </div>
 
       {/* z-[0]: Thingy — bottom left, behind gears */}
@@ -189,8 +189,8 @@ export default function MainContent() {
         </div>
       </div>
 
-      {/* z-[4]: Personal panel — bottom right */}
-      <PersonalPanel />
+      {/* z-[4]: Personal panel — bottom right (hidden for now) */}
+      {/* <PersonalPanel /> */}
 
       {/* Debug panel */}
       {DEBUG && (
