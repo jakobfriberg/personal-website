@@ -8,12 +8,24 @@ interface Vec2 {
   y: number;
 }
 
+interface DebugBody {
+  x: number;
+  y: number;
+  angle: number;
+  hw: number; // half-width in px
+  hh: number; // half-height in px
+  ox: number; // shape offset x in px
+  oy: number; // shape offset y in px
+}
+
 interface RopeOptions {
   anchorX: number;       // px — attachment point X in SVG coords
   anchorY: number;       // px — attachment point Y in SVG coords
   segmentCount: number;  // number of chain links
   segmentLength: number; // px — length per segment
   noteOffset?: number;   // px — distance from handle bottom to note hole
+  handleWidth?: number;  // px — visual handle width
+  handleHeight?: number; // px — visual handle height
 }
 
 // ── Constants ────────────────────────────────────────────────────────
@@ -35,7 +47,10 @@ const toScreenY = (m: number) => -m * SCALE;
 // ── Hook ─────────────────────────────────────────────────────────────
 
 export function useVerletRope(options: RopeOptions) {
-  const { anchorX, anchorY, segmentCount, segmentLength, noteOffset = 0 } = options;
+  const {
+    anchorX, anchorY, segmentCount, segmentLength,
+    noteOffset = 0, handleWidth = 0, handleHeight = 0,
+  } = options;
 
   const worldRef = useRef<planck.World | null>(null);
   const bodiesRef = useRef<planck.Body[]>([]);
@@ -51,8 +66,13 @@ export function useVerletRope(options: RopeOptions) {
     return pts;
   });
   const [handleAngle, setHandleAngle] = useState(0);
-  const [notePos, setNotePos] = useState<Vec2>({ x: anchorX, y: anchorY + segmentCount * segmentLength + noteOffset });
+  const [threadLeftPoints, setThreadLeftPoints] = useState<Vec2[]>([]);
+  const [threadRightPoints, setThreadRightPoints] = useState<Vec2[]>([]);
+  const [notePos, setNotePos] = useState<Vec2>({ x: anchorX, y: anchorY + segmentCount * segmentLength + handleHeight + noteOffset });
   const [noteAngle, setNoteAngle] = useState(0);
+  const [debugBodies, setDebugBodies] = useState<DebugBody[]>([]);
+  const threadLeftRef = useRef<planck.Body[]>([]);
+  const threadRightRef = useRef<planck.Body[]>([]);
   const noteBodyRef = useRef<planck.Body | null>(null);
 
   // Build the physics world
@@ -76,7 +96,11 @@ export function useVerletRope(options: RopeOptions) {
     const bodies: planck.Body[] = [anchor];
     let prevBody = anchor;
 
+    const handleHeightM = handleHeight / SCALE;
+    const handleWidthM = handleWidth / SCALE;
+
     for (let i = 1; i <= segmentCount; i++) {
+      const isHandle = i === segmentCount;
       const body = world.createBody({
         type: 'dynamic',
         position: planck.Vec2(ax, ay - i * segLen),
@@ -84,13 +108,27 @@ export function useVerletRope(options: RopeOptions) {
         angularDamping: 4.0,
       });
 
-      body.createFixture({
-        shape: planck.Box(0.01, segLen / 2),
-        density: i === segmentCount ? 500.0 : 5.0,
-        friction: 0.2,
-      });
+      if (isHandle) {
+        // Handle: full-sized box offset downward from body position
+        body.createFixture({
+          shape: planck.Box(
+            handleWidthM / 2,
+            handleHeightM / 2,
+            planck.Vec2(0, -handleHeightM / 2),
+            0,
+          ),
+          density: 21.0,
+          friction: 0.2,
+        });
+      } else {
+        body.createFixture({
+          shape: planck.Box(0.01, segLen / 2),
+          density: 5.0,
+          friction: 0.2,
+        });
+      }
 
-      // Revolute joint at the connection point between segments
+      // Same joint pattern for all segments
       const jointY = ay - (i - 0.5) * segLen;
       world.createJoint(
         planck.RevoluteJoint(
@@ -101,7 +139,6 @@ export function useVerletRope(options: RopeOptions) {
         ),
       );
 
-      // Rigid distance constraint — prevents stretching
       const pA = prevBody.getPosition();
       const pB = body.getPosition();
       world.createJoint(
@@ -120,39 +157,68 @@ export function useVerletRope(options: RopeOptions) {
 
     bodiesRef.current = bodies;
 
-    // Note body — hangs from handle bottom
+    // Thread + note — single chain, visual loop computed in rendering
     if (noteOffset > 0) {
       const handle = bodies[bodies.length - 1];
       const handlePos = handle.getPosition();
-      const handleBottomY = handlePos.y - (139 / SCALE); // handle is 139px tall, bottom in Y-up
-      const noteOffsetM = noteOffset / SCALE;
-      const jointY = handleBottomY - noteOffsetM;
-      const noteCenterY = jointY - 0.15; // note center below the hole
+      const handleBottomY = handlePos.y - handleHeightM;
+      const threadLen = noteOffset / SCALE;
 
-      const note = world.createBody({
+      // Thread body
+      const threadBody = world.createBody({
         type: 'dynamic',
-        position: planck.Vec2(handlePos.x, noteCenterY),
-        linearDamping: 2.0,
+        position: planck.Vec2(ax, handleBottomY - threadLen),
+        linearDamping: 3.0,
         angularDamping: 3.0,
       });
-
-      note.createFixture({
-        shape: planck.Box(0.15, 0.1),
-        density: 0.5,
+      threadBody.createFixture({
+        shape: planck.Box(0.01, threadLen / 2),
+        density: 1.0,
         friction: 0.2,
       });
-
-      // Revolute joint at handle bottom / note hole
       world.createJoint(
         planck.RevoluteJoint(
           { collideConnected: false },
           handle,
-          note,
-          planck.Vec2(handlePos.x, jointY),
+          threadBody,
+          planck.Vec2(ax, handleBottomY),
+        ),
+      );
+      world.createJoint(
+        planck.DistanceJoint(
+          { frequencyHz: 0, dampingRatio: 0, collideConnected: false },
+          handle,
+          threadBody,
+          planck.Vec2(ax, handleBottomY),
+          planck.Vec2(ax, handleBottomY - threadLen),
         ),
       );
 
-      noteBodyRef.current = note;
+      // Note body
+      const threadBottomY = handleBottomY - threadLen;
+      const noteBody = world.createBody({
+        type: 'dynamic',
+        position: planck.Vec2(ax, threadBottomY - 0.05),
+        linearDamping: 2.0,
+        angularDamping: 3.0,
+      });
+      noteBody.createFixture({
+        shape: planck.Box(0.15, 0.1, planck.Vec2(0, -0.22), -0.5),
+        density: 0.5,
+        friction: 0.2,
+      });
+      world.createJoint(
+        planck.RevoluteJoint(
+          { collideConnected: false },
+          threadBody,
+          noteBody,
+          planck.Vec2(ax, threadBottomY),
+        ),
+      );
+
+      threadLeftRef.current = [threadBody];
+      threadRightRef.current = [threadBody];
+      noteBodyRef.current = noteBody;
     }
 
     // Simulation loop
@@ -164,9 +230,73 @@ export function useVerletRope(options: RopeOptions) {
         return { x: toScreenX(p.x), y: toScreenY(p.y) };
       });
       setPoints(pts);
-      // Planck Y-up: negate angle for screen coords
       setHandleAngle(-bodies[bodies.length - 1].getAngle());
 
+      // Debug: all physics bodies bounding boxes
+      const allBodies = [...bodies, ...threadLeftRef.current, ...threadRightRef.current, ...(noteBodyRef.current ? [noteBodyRef.current] : [])];
+      const dbg: DebugBody[] = allBodies.map((b) => {
+        const p = b.getPosition();
+        const f = b.getFixtureList();
+        let hw = 0, hh = 0, ox = 0, oy = 0;
+        if (f) {
+          const shape = f.getShape() as planck.PolygonShape;
+          const verts = shape.m_vertices;
+          if (verts && verts.length >= 2) {
+            const minX = Math.min(...verts.map(v => v.x));
+            const maxX = Math.max(...verts.map(v => v.x));
+            const minY = Math.min(...verts.map(v => v.y));
+            const maxY = Math.max(...verts.map(v => v.y));
+            hw = ((maxX - minX) / 2) * SCALE;
+            hh = ((maxY - minY) / 2) * SCALE;
+            ox = ((minX + maxX) / 2) * SCALE;
+            oy = -((minY + maxY) / 2) * SCALE;
+          }
+        }
+        return {
+          x: toScreenX(p.x),
+          y: toScreenY(p.y),
+          angle: -b.getAngle(),
+          hw, hh, ox, oy,
+        };
+      });
+      setDebugBodies(dbg);
+
+      const handle = bodies[bodies.length - 1];
+      const hBottom = handle.getWorldPoint(planck.Vec2(0, -handleHeightM));
+      const hBottomScreen = { x: toScreenX(hBottom.x), y: toScreenY(hBottom.y) };
+
+      // Note hole position from physics
+      let noteHoleScreen = hBottomScreen;
+      if (noteBodyRef.current) {
+        const hole = noteBodyRef.current.getWorldPoint(planck.Vec2(0, 0));
+        noteHoleScreen = { x: toScreenX(hole.x), y: toScreenY(hole.y) };
+      }
+
+      // Compute visual loop: same start/end, spread in middle
+      const THREAD_SPREAD = 4; // px
+      if (threadLeftRef.current.length > 0) {
+        const midBodies = threadLeftRef.current.map((b) => {
+          const p = b.getPosition();
+          return { x: toScreenX(p.x), y: toScreenY(p.y) };
+        });
+        // Perpendicular offset at each mid point
+        const dx = noteHoleScreen.x - hBottomScreen.x;
+        const dy = noteHoleScreen.y - hBottomScreen.y;
+        const len = Math.sqrt(dx * dx + dy * dy) || 1;
+        const nx = -dy / len;
+        const ny = dx / len;
+
+        setThreadLeftPoints([
+          hBottomScreen,
+          ...midBodies.map(p => ({ x: p.x + nx * THREAD_SPREAD, y: p.y + ny * THREAD_SPREAD })),
+          noteHoleScreen,
+        ]);
+        setThreadRightPoints([
+          hBottomScreen,
+          ...midBodies.map(p => ({ x: p.x - nx * THREAD_SPREAD, y: p.y - ny * THREAD_SPREAD })),
+          noteHoleScreen,
+        ]);
+      }
       if (noteBodyRef.current) {
         const np = noteBodyRef.current.getPosition();
         setNotePos({ x: toScreenX(np.x), y: toScreenY(np.y) });
@@ -182,8 +312,11 @@ export function useVerletRope(options: RopeOptions) {
       cancelAnimationFrame(rafRef.current);
       worldRef.current = null;
       bodiesRef.current = [];
+      threadLeftRef.current = [];
+      threadRightRef.current = [];
+      noteBodyRef.current = null;
     };
-  }, [anchorX, anchorY, segmentCount, segmentLength]);
+  }, [anchorX, anchorY, segmentCount, segmentLength, noteOffset, handleWidth, handleHeight]);
 
   // Pull impulse — downward in physics = negative Y
   const pull = useCallback(() => {
@@ -264,5 +397,5 @@ export function useVerletRope(options: RopeOptions) {
     mouseJointRef.current = null;
   }, []);
 
-  return { points, handleAngle, notePos, noteAngle, pull, nudge, startDrag, moveDrag, endDrag };
+  return { points, handleAngle, threadLeftPoints, threadRightPoints, notePos, noteAngle, debugBodies, pull, nudge, startDrag, moveDrag, endDrag };
 }
