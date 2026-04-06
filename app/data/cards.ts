@@ -1,7 +1,13 @@
+export interface CardLink {
+  label: string;
+  url: string;
+}
+
 export interface CardData {
   id: number;
   title: string;
   content: string;
+  link?: CardLink;
 }
 
 export const CARDS: CardData[] = [
@@ -13,6 +19,10 @@ export const CARDS: CardData[] = [
       "engineering, and AI. " +
       "I like working on problems where the problem is clear, " +
       "but the solution isn't.",
+    link: {
+      label: 'Connect with me',
+      url: 'https://www.linkedin.com/in/jakob-friberg-b61261105',
+    },
   },
   {
     id: 1,
@@ -85,5 +95,9 @@ export const CARDS: CardData[] = [
       "If you're building something and need someone who can " +
       'move between product, engineering, and AI, feel free ' +
       'to reach out.',
+    link: {
+      label: 'Email me',
+      url: 'mailto:jakobfriberg1@gmail.com',
+    },
   },
 ];

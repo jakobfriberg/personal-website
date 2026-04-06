@@ -2,8 +2,11 @@
 
 import { motion } from 'framer-motion';
 
+import { ArrowUpRight } from 'lucide-react';
+
 import { GEAR_CONFIG } from '@/app/config/gear';
 import { CARDS, type CardData } from '@/app/data/cards';
+import Button from '@/app/(components)/ui/Button';
 
 export { CARDS, type CardData };
 
@@ -30,16 +33,31 @@ function getCardTransform(index: number, activeIndex: number) {
 function Card({ card, isActive }: { card: CardData; isActive: boolean }) {
   return (
     <div
-      className="w-[420px] rounded-xl border-2 border-white p-12 overflow-y-auto"
+      className="w-[420px] rounded-xl border-2 border-white p-12 flex flex-col"
       style={{
         backgroundColor: '#2E3134',
         height: 380,
       }}
     >
       {isActive && (
-        <p className="text-white/90 text-xl leading-relaxed whitespace-pre-line">
-          {card.content}
-        </p>
+        <>
+          <p className="text-white/90 text-xl leading-relaxed whitespace-pre-line overflow-y-auto min-h-0">
+            {card.content}
+          </p>
+          {card.link && (
+            <Button
+              href={card.link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="outline"
+              size="md"
+              className="mt-auto shrink-0 self-start"
+            >
+              {card.link.label}
+              <ArrowUpRight size={18} />
+            </Button>
+          )}
+        </>
       )}
     </div>
   );
