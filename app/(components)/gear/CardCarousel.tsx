@@ -30,10 +30,10 @@ function getCardTransform(index: number, activeIndex: number) {
 function Card({ card, isActive }: { card: CardData; isActive: boolean }) {
   return (
     <div
-      className="w-[420px] rounded-xl border-2 border-white p-12"
+      className="w-[420px] rounded-xl border-2 border-white p-12 overflow-y-auto"
       style={{
         backgroundColor: '#2E3134',
-        minHeight: 480,
+        height: 380,
       }}
     >
       {isActive && (
@@ -52,7 +52,7 @@ export default function CardCarousel({
 }) {
 
   return (
-    <div className="relative flex items-center justify-center" style={{ height: 480 }}>
+    <div className="relative flex items-center justify-center" style={{ height: 380 }}>
       {CARDS.map((card, i) => {
         const transform = getCardTransform(i, activeIndex);
 

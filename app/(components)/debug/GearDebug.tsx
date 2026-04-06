@@ -40,6 +40,8 @@ export default function GearDebug({
   onBgGearChange,
   motor,
   onMotorChange,
+  thingyProgress,
+  onThingyProgressChange,
 }: {
   onChange: (values: GearValues) => void;
   thingy: ThingyValues;
@@ -48,6 +50,8 @@ export default function GearDebug({
   onBgGearChange: (values: ThingyValues) => void;
   motor: ThingyValues;
   onMotorChange: (values: ThingyValues) => void;
+  thingyProgress: number;
+  onThingyProgressChange: (value: number) => void;
 }) {
   const [pos, setPos] = useState(GEAR_DEFAULTS);
 
@@ -92,6 +96,12 @@ export default function GearDebug({
           values: motor as unknown as Record<string, number>,
           onChange: (v) => onMotorChange(v as unknown as ThingyValues),
           sliders: tpsSliders,
+        },
+        {
+          title: 'Thingy path',
+          values: { progress: thingyProgress },
+          onChange: (v) => onThingyProgressChange(v.progress),
+          sliders: [{ key: 'progress', label: 'pos', unit: '', sensitivity: 0.005 }],
         },
       ]}
     />

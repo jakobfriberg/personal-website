@@ -1,17 +1,45 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import { GEAR_CONFIG } from '@/app/config/gear';
 
-const KNOB_CENTER = { x: 427.5, y: 249 };
-
 export default function ThingySvg({
-  trackRotation,
+  trackProgress,
 }: {
-  trackRotation: number;
+  trackProgress: number;
 }) {
   const containerRef = useRef<HTMLDivElement>(null);
+  const pathRef = useRef<SVGPathElement | null>(null);
+  const totalLengthRef = useRef(0);
+  const knobCenterRef = useRef({ x: 0, y: 0 });
+  const trackRef = useRef<SVGGElement | null>(null);
+  const knobRef = useRef<SVGGElement | null>(null);
+  const progressRef = useRef(trackProgress);
+  progressRef.current = trackProgress;
+
+  const applyPosition = useCallback((progress: number) => {
+    const path = pathRef.current;
+    const track = trackRef.current;
+    const knob = knobRef.current;
+    if (!path || !track || !knob) return;
+
+    const point = path.getPointAtLength(
+      progress * totalLengthRef.current,
+    );
+
+    const center = knobCenterRef.current;
+    const dx = point.x - center.x;
+    const dy = point.y - center.y;
+
+    const transform = `translate(${dx}px, ${dy}px)`;
+    const transition = `transform ${GEAR_CONFIG.thingyTransitionDuration}s ${GEAR_CONFIG.thingyTransitionEasing}`;
+
+    track.style.transform = transform;
+    track.style.transition = transition;
+    knob.style.transform = transform;
+    knob.style.transition = transition;
+  }, []);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -26,17 +54,35 @@ export default function ThingySvg({
           svg.style.width = '100%';
           svg.style.height = '100%';
         }
+
+        const path = el.querySelector('#movement-path') as SVGPathElement | null;
+        const track = el.querySelector('#track-2') as SVGGElement | null;
+        const knob = el.querySelector('#knob') as SVGGElement | null;
+
+        if (!path || !track || !knob) return;
+
+        pathRef.current = path;
+        trackRef.current = track;
+        knobRef.current = knob;
+        totalLengthRef.current = path.getTotalLength();
+        // Knob center — this is the point we want to place on the path
+        const knobBBox = knob.getBBox();
+        knobCenterRef.current = {
+          x: knobBBox.x + knobBBox.width / 2,
+          y: knobBBox.y + knobBBox.height / 2,
+        };
+
+        // Hide the movement path
+        path.style.display = 'none';
+
+        // Apply initial position
+        applyPosition(progressRef.current);
       });
-  }, []);
+  }, [applyPosition]);
 
   useEffect(() => {
-    const track = containerRef.current?.querySelector('#track-2');
-    if (!track) return;
-    const s = (track as SVGGElement).style;
-    s.transformOrigin = `${KNOB_CENTER.x}px ${KNOB_CENTER.y}px`;
-    s.transform = `rotate(${trackRotation}deg)`;
-    s.transition = `transform ${GEAR_CONFIG.thingyTransitionDuration}s ${GEAR_CONFIG.thingyTransitionEasing}`;
-  }, [trackRotation]);
+    applyPosition(trackProgress);
+  }, [trackProgress, applyPosition]);
 
   return (
     <div

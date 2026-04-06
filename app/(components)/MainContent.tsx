@@ -20,6 +20,7 @@ export default function MainContent() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [bgGear, setBgGear] = useState(BG_GEAR_DEFAULTS);
   const [motor, setMotor] = useState(MOTOR_DEFAULTS);
+  const [debugProgress, setDebugProgress] = useState<number | null>(null);
 
   const handleGearChange = useCallback(
     (values: GearValues) => setGear(values),
@@ -27,17 +28,17 @@ export default function MainContent() {
   );
 
   const prev = useCallback(
-    () => setActiveIndex((i) => Math.max(0, i - 1)),
+    () => { setDebugProgress(null); setActiveIndex((i) => Math.max(0, i - 1)); },
     [],
   );
   const next = useCallback(
-    () => setActiveIndex((i) => Math.min(CARDS.length - 1, i + 1)),
+    () => { setDebugProgress(null); setActiveIndex((i) => Math.min(CARDS.length - 1, i + 1)); },
     [],
   );
 
   const lgAngle = activeIndex * GEAR_CONFIG.degreesPerCard;
   const smAngle = -lgAngle * gear.gearRatio;
-  const thingyTrackAngle = GEAR_CONFIG.thingyAngles[activeIndex] ?? 0;
+  const thingyProgress = debugProgress ?? (GEAR_CONFIG.thingyProgress[activeIndex] ?? 0);
 
   return (
     <motion.div
@@ -143,7 +144,7 @@ export default function MainContent() {
           transformOrigin: 'top left',
         }}
       >
-        <ThingySvg trackRotation={thingyTrackAngle} />
+        <ThingySvg trackProgress={thingyProgress} />
       </div>
 
       {/* z-[5]: Pull levers — right side, hanging from top */}
@@ -201,6 +202,8 @@ export default function MainContent() {
           onBgGearChange={setBgGear}
           motor={motor}
           onMotorChange={setMotor}
+          thingyProgress={thingyProgress}
+          onThingyProgressChange={setDebugProgress}
         />
       )}
     </motion.div>
