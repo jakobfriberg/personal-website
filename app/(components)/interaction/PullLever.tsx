@@ -48,7 +48,7 @@ export default function PullLever({
 
   const {
     points, handleAngle, threadLeftPoints: tLeft, threadRightPoints: tRight,
-    notePos, noteAngle, debugBodies,
+    notePos, noteAngle,
     pull, nudge, startDrag, moveDrag, endDrag,
   } = useVerletRope({
     anchorX: ANCHOR_X,

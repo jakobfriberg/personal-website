@@ -8,16 +8,6 @@ interface Vec2 {
   y: number;
 }
 
-interface DebugBody {
-  x: number;
-  y: number;
-  angle: number;
-  hw: number; // half-width in px
-  hh: number; // half-height in px
-  ox: number; // shape offset x in px
-  oy: number; // shape offset y in px
-}
-
 interface RopeOptions {
   anchorX: number;       // px — attachment point X in SVG coords
   anchorY: number;       // px — attachment point Y in SVG coords
@@ -70,7 +60,6 @@ export function useVerletRope(options: RopeOptions) {
   const [threadRightPoints, setThreadRightPoints] = useState<Vec2[]>([]);
   const [notePos, setNotePos] = useState<Vec2>({ x: anchorX, y: anchorY + segmentCount * segmentLength + handleHeight + noteOffset });
   const [noteAngle, setNoteAngle] = useState(0);
-  const [debugBodies, setDebugBodies] = useState<DebugBody[]>([]);
   const threadLeftRef = useRef<planck.Body[]>([]);
   const threadRightRef = useRef<planck.Body[]>([]);
   const noteBodyRef = useRef<planck.Body | null>(null);
@@ -232,35 +221,6 @@ export function useVerletRope(options: RopeOptions) {
       setPoints(pts);
       setHandleAngle(-bodies[bodies.length - 1].getAngle());
 
-      // Debug: all physics bodies bounding boxes
-      const allBodies = [...bodies, ...threadLeftRef.current, ...threadRightRef.current, ...(noteBodyRef.current ? [noteBodyRef.current] : [])];
-      const dbg: DebugBody[] = allBodies.map((b) => {
-        const p = b.getPosition();
-        const f = b.getFixtureList();
-        let hw = 0, hh = 0, ox = 0, oy = 0;
-        if (f) {
-          const shape = f.getShape() as planck.PolygonShape;
-          const verts = shape.m_vertices;
-          if (verts && verts.length >= 2) {
-            const minX = Math.min(...verts.map(v => v.x));
-            const maxX = Math.max(...verts.map(v => v.x));
-            const minY = Math.min(...verts.map(v => v.y));
-            const maxY = Math.max(...verts.map(v => v.y));
-            hw = ((maxX - minX) / 2) * SCALE;
-            hh = ((maxY - minY) / 2) * SCALE;
-            ox = ((minX + maxX) / 2) * SCALE;
-            oy = -((minY + maxY) / 2) * SCALE;
-          }
-        }
-        return {
-          x: toScreenX(p.x),
-          y: toScreenY(p.y),
-          angle: -b.getAngle(),
-          hw, hh, ox, oy,
-        };
-      });
-      setDebugBodies(dbg);
-
       const handle = bodies[bodies.length - 1];
       const hBottom = handle.getWorldPoint(planck.Vec2(0, -handleHeightM));
       const hBottomScreen = { x: toScreenX(hBottom.x), y: toScreenY(hBottom.y) };
@@ -397,5 +357,5 @@ export function useVerletRope(options: RopeOptions) {
     mouseJointRef.current = null;
   }, []);
 
-  return { points, handleAngle, threadLeftPoints, threadRightPoints, notePos, noteAngle, debugBodies, pull, nudge, startDrag, moveDrag, endDrag };
+  return { points, handleAngle, threadLeftPoints, threadRightPoints, notePos, noteAngle, pull, nudge, startDrag, moveDrag, endDrag };
 }

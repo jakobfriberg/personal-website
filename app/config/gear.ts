@@ -27,3 +27,6 @@ export const GEAR_CONFIG = {
 } as const;
 
 export type GearConfig = typeof GEAR_CONFIG;
+
+export const THINGY_DEFAULTS = { top: 51.15, left: -4.78, scale: 0.87 };
+export const BG_GEAR_DEFAULTS = { top: 20, left: -20, scale: 2.0 };

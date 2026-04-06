@@ -123,7 +123,6 @@ export default function DebugPanel({
               unit={s.unit}
               sensitivity={s.sensitivity}
               onChange={(v) => {
-                console.log(`[${group.title}] ${s.key}: ${group.values[s.key]} → ${v}`, { ...group.values });
                 group.onChange({ ...group.values, [s.key]: v });
               }}
             />

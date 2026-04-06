@@ -2,25 +2,7 @@
 
 import { useState } from 'react';
 
-interface PersonalItem {
-  id: string;
-  icon: string;
-  label: string;
-  description: string;
-  top: string;
-  left: string;
-}
-
-const ITEMS: PersonalItem[] = [
-  { id: 'music', icon: '🎵', label: 'Music', description: 'Placeholder — what I listen to.', top: '15%', left: '10%' },
-  { id: 'coffee', icon: '☕', label: 'Coffee', description: 'Placeholder — how I take it.', top: '35%', left: '65%' },
-  { id: 'travel', icon: '✈️', label: 'Travel', description: "Placeholder — where I've been.", top: '60%', left: '25%' },
-  { id: 'books', icon: '📚', label: 'Books', description: 'Placeholder — what I read.', top: '20%', left: '45%' },
-  { id: 'cooking', icon: '🍳', label: 'Cooking', description: 'Placeholder — what I cook.', top: '55%', left: '75%' },
-  { id: 'running', icon: '🏃', label: 'Running', description: 'Placeholder — how far I go.', top: '75%', left: '50%' },
-  { id: 'film', icon: '🎬', label: 'Film', description: 'Placeholder — what I watch.', top: '40%', left: '15%' },
-  { id: 'code', icon: '⌨️', label: 'Side projects', description: 'Placeholder — what I build for fun.', top: '80%', left: '10%' },
-];
+import { ITEMS } from '@/app/data/personal-items';
 
 export default function PersonalPanel() {
   const [open, setOpen] = useState(false);

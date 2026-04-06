@@ -3,19 +3,15 @@
 import { motion } from 'framer-motion';
 import { useCallback, useState } from 'react';
 
-import { DEBUG, GEAR_CONFIG } from '@/app/config/gear';
+import { BG_GEAR_DEFAULTS, DEBUG, GEAR_CONFIG, THINGY_DEFAULTS } from '@/app/config/gear';
+import { CARDS } from '@/app/data/cards';
 
-import CardCarousel, { CARDS } from './CardCarousel';
-import GearDebug, { GEAR_DEFAULTS, type GearValues } from './GearDebug';
-import MechanicalCounter from './MechanicalCounter';
-import PersonalPanel from './PersonalPanel';
-import PullLever from './PullLever';
-import ThingySvg from './ThingySvg';
-
-const THINGY_DEFAULTS = { top: 51.15, left: -4.78, scale: 0.87 };
-const BG_GEAR_DEFAULTS = { top: 20, left: -20, scale: 2.0 };
-
-const CARDS_COUNT = 9;
+import GearDebug, { GEAR_DEFAULTS, type GearValues } from './debug/GearDebug';
+import CardCarousel from './gear/CardCarousel';
+import MechanicalCounter from './gear/MechanicalCounter';
+import ThingySvg from './gear/ThingySvg';
+import PersonalPanel from './interaction/PersonalPanel';
+import PullLever from './interaction/PullLever';
 
 export default function MainContent() {
   const [gear, setGear] = useState(GEAR_DEFAULTS);
@@ -33,7 +29,7 @@ export default function MainContent() {
     [],
   );
   const next = useCallback(
-    () => setActiveIndex((i) => Math.min(CARDS_COUNT - 1, i + 1)),
+    () => setActiveIndex((i) => Math.min(CARDS.length - 1, i + 1)),
     [],
   );
 
@@ -146,7 +142,7 @@ export default function MainContent() {
         <PullLever
           direction="next"
           onClick={next}
-          disabled={activeIndex === CARDS_COUNT - 1}
+          disabled={activeIndex === CARDS.length - 1}
         />
       </div>
 
