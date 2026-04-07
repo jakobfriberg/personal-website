@@ -33,15 +33,12 @@ function getCardTransform(index: number, activeIndex: number) {
 function Card({ card, isActive }: { card: CardData; isActive: boolean }) {
   return (
     <div
-      className="w-[420px] rounded-xl border-2 border-white p-12 flex flex-col"
-      style={{
-        backgroundColor: '#2E3134',
-        height: 380,
-      }}
+      className="w-full max-w-[420px] rounded-xl border-2 border-white p-10 md:p-12 flex flex-col h-[380px]"
+      style={{ backgroundColor: '#2E3134' }}
     >
       {isActive && (
         <>
-          <p className="text-white/90 text-xl leading-relaxed whitespace-pre-line overflow-y-auto min-h-0">
+          <p className="text-white/90 text-lg md:text-xl leading-relaxed whitespace-pre-line overflow-y-auto min-h-0">
             {card.content}
           </p>
           {card.link && (
@@ -70,14 +67,14 @@ export default function CardCarousel({
 }) {
 
   return (
-    <div className="relative flex items-center justify-center" style={{ height: 380 }}>
+    <div className="relative flex items-center justify-center h-[380px]">
       {CARDS.map((card, i) => {
         const transform = getCardTransform(i, activeIndex);
 
         return (
           <motion.div
             key={card.id}
-            className="absolute origin-top"
+            className="absolute origin-top w-full max-w-[420px]"
             animate={{
               x: transform.x,
               scale: transform.scale,

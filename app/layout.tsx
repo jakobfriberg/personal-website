@@ -14,7 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} ${bnRogall.variable}`}>
-      <body className="min-h-screen">
+      <body className="min-h-screen overflow-hidden">
         <main>{children}</main>
       </body>
     </html>

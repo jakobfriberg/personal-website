@@ -5,12 +5,12 @@ export const DEBUG = false;
 
 export const GEAR_CONFIG = {
   // Large gear position & scale
-  lgTop: -24.4,
+  lgTop: -25.36,
   lgLeft: -15.13,
   lgScale: 1.43,
 
   // Small gear position & scale
-  smTop: 12.32,
+  smTop: 8.68,
   smLeft: 28.76,
   smScale: 0.93,
 
@@ -33,4 +33,4 @@ export type GearConfig = typeof GEAR_CONFIG;
 
 export const THINGY_DEFAULTS = { top: 50.6, left: 1.92, scale: 0.87 };
 export const BG_GEAR_DEFAULTS = { top: 20, left: -20, scale: 2.0 };
-export const MOTOR_DEFAULTS = { top: 51.73, left: 41.59, scale: 1.4 };
+export const MOTOR_DEFAULTS = { top: 53.46, left: 41.59, scale: 1.4 };

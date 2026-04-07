@@ -17,10 +17,7 @@ const CHAR_INDEX = new Map(CHAR_SET.map((c, i) => [c, i]));
 
 const CHAR_HEIGHT = 40; // px — height of one character cell
 const CHAR_WIDTH = 24;  // px — fixed width per slot
-const TITLE_SLOTS = 13; // longest title: "WHAT I BUILD"
-
-// Match the full card stack width: 420px card + 8 offsets * 20px spread on each side
-const COUNTER_WIDTH = 420;
+const TITLE_SLOTS = 13; // longest title
 
 // ── CharacterSlot ──────────────────────────────────────────────────
 
@@ -75,10 +72,9 @@ export default function MechanicalCounter({
 
   return (
     <div
-      className="flex items-center rounded-t-xl border-2 border-white px-4 py-3"
+      className="flex items-center rounded-t-xl border-2 border-white px-4 py-3 w-full max-w-[420px]"
       style={{
         backgroundColor: '#2E3134',
-        width: COUNTER_WIDTH,
         boxShadow: '0 8px 16px rgba(0,0,0,0.4)',
       }}
     >
