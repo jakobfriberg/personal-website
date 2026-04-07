@@ -12,8 +12,8 @@ import MechanicalCounter from './gear/MechanicalCounter';
 import MotorSvg from './gear/MotorSvg';
 import ThingySvg from './gear/ThingySvg';
 import SmokeFog from './gear/SmokeFog';
-import PersonalPanel from './interaction/PersonalPanel';
 import PullLever from './interaction/PullLever';
+import SocialLinks from './ui/SocialLinks';
 
 export default function MainContent() {
   const [gear, setGear] = useState(GEAR_DEFAULTS);
@@ -192,8 +192,8 @@ export default function MainContent() {
         </div>
       </div>
 
-      {/* z-[4]: Personal panel — bottom right (hidden for now) */}
-      {/* <PersonalPanel /> */}
+      {/* z-[4]: Social links — bottom right */}
+      <SocialLinks />
 
       {/* Debug panel */}
       {DEBUG && (
