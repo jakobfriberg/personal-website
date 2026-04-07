@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useCallback, useState } from 'react';
 
 import { BG_GEAR_DEFAULTS, DEBUG, GEAR_CONFIG, MOTOR_DEFAULTS, THINGY_DEFAULTS } from '@/app/config/gear';
-import { BG_CANVAS_OFFSET, DESIGN_VIEWPORT } from '@/app/config/layout';
+import { BG_CANVAS_OFFSET, DESIGN_VIEWPORT } from '@/app/config/canvas';
 import { CARDS } from '@/app/data/cards';
 
 import GearDebug, { GEAR_DEFAULTS, type GearValues } from './debug/GearDebug';
