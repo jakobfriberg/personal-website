@@ -62,12 +62,12 @@ export const CARDS: CardData[] = [
   },
   {
     id: 5,
-    title: 'The process',
+    title: 'My process',
     content:
       'Early in a project, learning matters more than ' +
       'optimizing. I love talking to users, building ' +
       'prototypes, and seeing what sticks. Trust the process ' +
-      'and you start to see glimpses of the right product.',
+      'and you start to see glimpses of the viable product.',
   },
   {
     id: 6,
