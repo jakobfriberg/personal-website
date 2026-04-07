@@ -11,6 +11,7 @@ import CardCarousel from './gear/CardCarousel';
 import MechanicalCounter from './gear/MechanicalCounter';
 import MotorSvg from './gear/MotorSvg';
 import ThingySvg from './gear/ThingySvg';
+import SmokeFog from './gear/SmokeFog';
 import PersonalPanel from './interaction/PersonalPanel';
 import PullLever from './interaction/PullLever';
 
@@ -47,6 +48,8 @@ export default function MainContent() {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.8, delay: 0.2 }}
     >
+      <SmokeFog />
+
       {/* z-[1]: Gears — below gradient + cards */}
       <div
         className="absolute z-[1]"
