@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useCallback, useState } from 'react';
 
 import { BG_GEAR_DEFAULTS, DEBUG, GEAR_CONFIG, MOTOR_DEFAULTS, THINGY_DEFAULTS } from '@/app/config/gear';
+import { BG_CANVAS_OFFSET, DESIGN_VIEWPORT } from '@/app/config/layout';
 import { CARDS } from '@/app/data/cards';
 
 import GearDebug, { GEAR_DEFAULTS, type GearValues } from './debug/GearDebug';
@@ -55,10 +56,15 @@ export default function MainContent() {
       */}
       <SmokeFog />
 
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none overflow-hidden">
         <div
-          className="relative shrink-0"
-          style={{ width: 1728, height: 900 }}
+          className="relative shrink-0 max-lg:translate-x-[var(--bg-offset-x)] max-lg:translate-y-[var(--bg-offset-y)]"
+          style={{
+            width: DESIGN_VIEWPORT.width,
+            height: DESIGN_VIEWPORT.height,
+            '--bg-offset-x': `${BG_CANVAS_OFFSET.x}px`,
+            '--bg-offset-y': `${BG_CANVAS_OFFSET.y}px`,
+          } as React.CSSProperties}
         >
 
           {/* z-[1]: Gears — below gradient + cards */}
