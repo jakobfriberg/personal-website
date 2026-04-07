@@ -1,2 +1,7 @@
 - Have a crank in the background with pistons or something running.
 - Be able to crank up settings in some kind of engine panel how e.g. fast the engine is running. This will speed up the pistons and the wheel. If you max it it starts to go wild and warn that the engine is overloading.
+- Add machine room sounds, but with an obvious turn off sound button.
+- Maybe the smoke should have the same style with outlines. We could make a few cloud shapes to make use of that grows in the same manner. Just that they don't have the blur effect on them.
+- Combine the BN nicks fint with a MONO font for the technical. The BN nicks can be a bit more playful but still technical so we get a good sync between them.
+- Add always visible links in the lower right - LinkedIn, Email, and if something else is needed.
+- Add also a link to linkedin on the last page.
