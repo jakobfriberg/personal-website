@@ -24,7 +24,11 @@ const LINKS: { href: string; icon: ReactNode; label: string }[] = [
 
 export default function SocialLinks() {
   return (
-    <div className="fixed bottom-6 right-6 z-[4] flex gap-2">
+    <div className="fixed bottom-6 right-6 z-[4] flex flex-col items-start gap-1.5">
+      <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/40">
+        Contact
+      </span>
+      <div className="flex gap-2">
       {LINKS.map(({ href, icon, label }) => (
         <a
           key={label}
@@ -37,6 +41,7 @@ export default function SocialLinks() {
           {icon}
         </a>
       ))}
+      </div>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { Inter, JetBrains_Mono } from 'next/font/google';
+import { Inter, JetBrains_Mono, Bungee } from 'next/font/google';
 import localFont from 'next/font/local';
 
 export const inter = Inter({
@@ -13,6 +13,13 @@ export const jetbrainsMono = JetBrains_Mono({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700', '800'],
   display: 'swap'
+});
+
+export const bungee = Bungee({
+  variable: '--font-bungee',
+  subsets: ['latin'],
+  weight: '400',
+  display: 'swap',
 });
 
 export const bnRogall = localFont({

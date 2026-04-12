@@ -156,12 +156,15 @@ export default function PullLever({
   // Note angle in degrees
   const noteAngleDeg = noteAngle * (180 / Math.PI);
 
+  const muted = disabled && revealed;
+  const strokeColor = muted ? 'rgba(255,255,255,0.12)' : 'white';
+
   return (
     <div
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onLostPointerCapture={handlePointerUp}
-      className={`relative pointer-events-none overflow-visible ${disabled && revealed ? 'opacity-30' : ''}`}
+      className="relative pointer-events-none overflow-visible"
       style={{
         width: HANDLE_WIDTH,
         height: SVG_HEIGHT,
@@ -183,14 +186,14 @@ export default function PullLever({
         {/* Rope — two parallel edges */}
         <polyline
           points={leftPoints.join(' ')}
-          stroke="white"
+          stroke={strokeColor}
           strokeWidth="2"
           fill="none"
           pointerEvents="none"
         />
         <polyline
           points={rightPoints.join(' ')}
-          stroke="white"
+          stroke={strokeColor}
           strokeWidth="2"
           fill="none"
           pointerEvents="none"
@@ -199,7 +202,7 @@ export default function PullLever({
         {/* Thread behind note — left side of loop */}
         <polyline
           points={threadLeftStr}
-          stroke="white"
+          stroke={strokeColor}
           strokeWidth="1"
           fill="none"
           pointerEvents="none"
@@ -214,12 +217,13 @@ export default function PullLever({
           height={66}
           transform={`rotate(${noteAngleDeg}, ${notePos.x}, ${notePos.y})`}
           pointerEvents="none"
+          opacity={muted ? 0.12 : 1}
         />
 
         {/* Thread in front of note — right side of loop */}
         <polyline
           points={threadRightStr}
-          stroke="white"
+          stroke={strokeColor}
           strokeWidth="1"
           fill="none"
           pointerEvents="none"
@@ -237,7 +241,7 @@ export default function PullLever({
             width={HANDLE_WIDTH}
             height={HANDLE_HEIGHT}
             fill="#35383B"
-            stroke="white"
+            stroke={strokeColor}
             strokeWidth="2"
             rx="16"
           />

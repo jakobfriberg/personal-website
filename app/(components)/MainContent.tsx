@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import { useCallback, useState } from 'react';
 
 import { BG_GEAR_DEFAULTS, DEBUG, GEAR_CONFIG, MOTOR_DEFAULTS, THINGY_DEFAULTS } from '@/app/config/gear';
@@ -16,7 +15,6 @@ import SmokeFog from './gear/SmokeFog';
 import PullLever from './interaction/PullLever';
 import MobileNav from './ui/MobileNav';
 import SocialLinks from './ui/SocialLinks';
-
 export default function MainContent() {
   const [gear, setGear] = useState(GEAR_DEFAULTS);
   const [thingy, setThingy] = useState(THINGY_DEFAULTS);
@@ -44,12 +42,7 @@ export default function MainContent() {
   const thingyProgress = debugProgress ?? (GEAR_CONFIG.thingyProgress[activeIndex] ?? 0);
 
   return (
-    <motion.div
-      className="fixed inset-0 bg-main-grid"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.8, delay: 0.2 }}
-    >
+    <div className="fixed inset-0 bg-main-grid">
       {/*
         Background canvas — fixed at design viewport (1728×900), centered.
         Smaller screens clip the edges; larger screens show the grid fill.
@@ -238,6 +231,6 @@ export default function MainContent() {
           onThingyProgressChange={setDebugProgress}
         />
       )}
-    </motion.div>
+    </div>
   );
 }
