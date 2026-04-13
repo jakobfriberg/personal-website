@@ -18,6 +18,7 @@ const FINAL_TOP = 16;
 
 const SCROLL_SENSITIVITY = 0.0008;
 const SMOOTH_FACTOR = 0.06;
+const SNAP_THRESHOLD = 0.3; // once past 30%, snap to full completion
 
 function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
@@ -116,10 +117,11 @@ export default function HomePage() {
     const handler = (e: WheelEvent) => {
       if (lockedRef.current) return;
       e.preventDefault();
-      targetRef.current = clamp(
+      const next = clamp(
         targetRef.current + e.deltaY * SCROLL_SENSITIVITY,
         0, 1,
       );
+      targetRef.current = next >= SNAP_THRESHOLD ? 1 : next;
     };
     window.addEventListener('wheel', handler, { passive: false });
     return () => window.removeEventListener('wheel', handler);
@@ -135,10 +137,11 @@ export default function HomePage() {
       e.preventDefault();
       const deltaY = touchYRef.current - e.touches[0].clientY;
       touchYRef.current = e.touches[0].clientY;
-      targetRef.current = clamp(
+      const next = clamp(
         targetRef.current + deltaY * SCROLL_SENSITIVITY * 2,
         0, 1,
       );
+      targetRef.current = next >= SNAP_THRESHOLD ? 1 : next;
     };
     const onEnd = () => { touchYRef.current = null; };
     window.addEventListener('touchstart', onStart, { passive: true });
