@@ -33,4 +33,4 @@ export type GearConfig = typeof GEAR_CONFIG;
 
 export const THINGY_DEFAULTS = { top: 50.6, left: 1.92, scale: 0.87 };
 export const BG_GEAR_DEFAULTS = { top: 20, left: -20, scale: 2.0 };
-export const MOTOR_DEFAULTS = { top: 53.46, left: 41.59, scale: 1.4 };
+export const MOTOR_DEFAULTS = { top: 54.00, left: 41.59, scale: 1.4 };

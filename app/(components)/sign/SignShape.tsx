@@ -1,5 +1,7 @@
 'use client';
 
+import { useId } from 'react';
+
 // ── Config ──────────────────────────────────────────────────────────
 const FRAME_GAP = 8;
 const OUTER_RADIUS = 40;
@@ -19,6 +21,7 @@ export default function SignShape({
   fontSize,
   className,
 }: SignShapeProps) {
+  const filterId = `sign-shadow-${useId()}`;
   const svgW = width + SHADOW_PAD * 2;
   const svgH = height + SHADOW_PAD * 2;
 
@@ -32,7 +35,7 @@ export default function SignShape({
       className={className}
     >
       <defs>
-        <filter id="sign-shadow" x="-20%" y="-20%" width="140%" height="140%">
+        <filter id={filterId} x="-20%" y="-20%" width="140%" height="140%">
           <feDropShadow
             dx="4" dy="6" stdDeviation="8"
             floodColor="#000000" floodOpacity="0.5"
@@ -40,7 +43,7 @@ export default function SignShape({
         </filter>
       </defs>
 
-      <g filter="url(#sign-shadow)">
+      <g filter={`url(#${filterId})`}>
         {/* Outer frame */}
         <rect
           width={width}

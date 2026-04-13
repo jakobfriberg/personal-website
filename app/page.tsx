@@ -1,24 +1,23 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import MainContent from '@/app/(components)/MainContent';
 import SignShape from '@/app/(components)/sign/SignShape';
 
-// ── Sign config (shared dimensions) ─────────────────────────────────
+// ── Sign config ─────────────────────────────────────────────────────
 const SIGN_FONT_SIZE = 52;
 const SIGN_PADDING_Y = 40;
 const SIGN_WIDTH = 720;
 const SIGN_HEIGHT = SIGN_FONT_SIZE + SIGN_PADDING_Y * 2;
 
-const INTRO_SCALE = 1.8;
-const FINAL_SCALE = 1.0;
-const FINAL_TOP = 16; // px from top on main page
+const SIGN_SVG_WIDTH = SIGN_WIDTH + 60;
+const DESKTOP_INTRO_SCALE = 1.8;
+const DESKTOP_FINAL_SCALE = 1.0;
+const FINAL_TOP = 16;
 
-// How much wheel delta maps to 0→1 progress
 const SCROLL_SENSITIVITY = 0.0008;
-// Lerp factor for smooth progress
-const SMOOTH_FACTOR = 0.08;
+const SMOOTH_FACTOR = 0.06;
 
 function lerp(a: number, b: number, t: number) {
   return a + (b - a) * t;
@@ -29,39 +28,87 @@ function clamp(v: number, min: number, max: number) {
 }
 
 export default function HomePage() {
-  const [progress, setProgress] = useState(0);
+  const [done, setDone] = useState(false);
+
   const targetRef = useRef(0);
   const currentRef = useRef(0);
   const lockedRef = useRef(false);
   const rafRef = useRef<number>(0);
   const touchYRef = useRef<number | null>(null);
 
-  // Smooth animation loop
+  // DOM refs for direct manipulation (no React re-renders per frame)
+  const signContainerRef = useRef<HTMLDivElement>(null);
+  const signScaleRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const vignetteRef = useRef<HTMLDivElement>(null);
+  const cueRef = useRef<HTMLDivElement>(null);
+
+  const getScales = useCallback(() => {
+    const vw = window.innerWidth;
+    return {
+      intro: Math.min(DESKTOP_INTRO_SCALE, vw * 0.85 / SIGN_SVG_WIDTH),
+      final: Math.min(DESKTOP_FINAL_SCALE, vw * 0.92 / SIGN_SVG_WIDTH),
+    };
+  }, []);
+
+  // Animation loop — direct DOM updates, no setState
   useEffect(() => {
+    let scales = getScales();
+
+    const onResize = () => { scales = getScales(); };
+    window.addEventListener('resize', onResize);
+
     const step = () => {
       const prev = currentRef.current;
       const next = lerp(prev, targetRef.current, SMOOTH_FACTOR);
-
-      // Snap to target when close enough
-      const snapped = Math.abs(next - targetRef.current) < 0.001
+      const p = Math.abs(next - targetRef.current) < 0.001
         ? targetRef.current
         : next;
 
-      if (snapped !== prev) {
-        currentRef.current = snapped;
-        setProgress(snapped);
+      currentRef.current = p;
+
+      // Stop the loop once fully transitioned
+      if (p >= 1 && !lockedRef.current) {
+        lockedRef.current = true;
+        setDone(true);
+        return;
       }
 
-      // Lock when we've fully arrived at 1
-      if (snapped >= 1 && !lockedRef.current) {
-        lockedRef.current = true;
+      // Apply to DOM directly — only transform + opacity (GPU-composited)
+      const scale = lerp(scales.intro, scales.final, p);
+      const topPercent = lerp(50, 0, p);
+      const topPx = lerp(0, FINAL_TOP, p);
+      const translateY = lerp(-50, 0, p);
+      const contentOpacity = clamp((p - 0.5) / 0.5, 0, 1);
+      const vignetteOpacity = clamp(1 - p * 2.5, 0, 1);
+      const cueOpacity = clamp(1 - p * 5, 0, 1);
+
+      if (signContainerRef.current) {
+        signContainerRef.current.style.top = `calc(${topPercent}% + ${topPx}px)`;
+        signContainerRef.current.style.transform = `translateY(${translateY}%)`;
+      }
+      if (signScaleRef.current) {
+        signScaleRef.current.style.transform = `scale(${scale})`;
+      }
+      if (contentRef.current) {
+        contentRef.current.style.opacity = String(contentOpacity);
+      }
+      if (vignetteRef.current) {
+        vignetteRef.current.style.opacity = String(vignetteOpacity);
+      }
+      if (cueRef.current) {
+        cueRef.current.style.opacity = String(cueOpacity);
       }
 
       rafRef.current = requestAnimationFrame(step);
     };
+
     rafRef.current = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, []);
+    return () => {
+      cancelAnimationFrame(rafRef.current);
+      window.removeEventListener('resize', onResize);
+    };
+  }, [getScales]);
 
   // Wheel handler
   useEffect(() => {
@@ -77,7 +124,7 @@ export default function HomePage() {
     return () => window.removeEventListener('wheel', handler);
   }, []);
 
-  // Touch handlers for mobile
+  // Touch handlers
   useEffect(() => {
     const onStart = (e: TouchEvent) => {
       touchYRef.current = e.touches[0].clientY;
@@ -103,29 +150,21 @@ export default function HomePage() {
     };
   }, []);
 
-  const scale = lerp(INTRO_SCALE, FINAL_SCALE, progress);
-  // At progress 0: vertically centered (top:50% + translateY(-50%))
-  // At progress 1: top: FINAL_TOP, translateY: 0
-  const topPercent = lerp(50, 0, progress);
-  const topPx = lerp(0, FINAL_TOP, progress);
-  const translateYPercent = lerp(-50, 0, progress);
-  const vignetteOpacity = clamp(1 - progress * 2.5, 0, 1);
-  const contentOpacity = clamp((progress - 0.5) / 0.5, 0, 1);
-  const cueOpacity = clamp(1 - progress * 5, 0, 1);
-
   return (
     <div className="fixed inset-0 bg-main-grid">
-      {/* Main content — fades in */}
-      <div style={{ opacity: contentOpacity }}>
+      {/* Main content */}
+      <div ref={contentRef} style={{ opacity: 0 }}>
         <MainContent />
       </div>
 
-      {/* Intro vignette — fades out */}
-      {vignetteOpacity > 0 && (
+      {/* Click blocker + vignette */}
+      {!done && (
         <div
-          className="fixed inset-0 pointer-events-none z-40"
+          ref={vignetteRef}
+          className="fixed inset-0 z-40 cursor-pointer"
+          onClick={() => { targetRef.current = 1; }}
           style={{
-            opacity: vignetteOpacity,
+            opacity: 1,
             background: [
               'linear-gradient(to right, #35383B, transparent 20%, transparent 80%, #35383B)',
               'linear-gradient(to bottom, #35383B, transparent 20%, transparent 80%, #35383B)',
@@ -134,15 +173,19 @@ export default function HomePage() {
         />
       )}
 
-      {/* Sign — always on top, transforms from center to top */}
+      {/* Sign */}
       <div
+        ref={signContainerRef}
         className="fixed left-0 right-0 z-50 flex flex-col items-center pointer-events-none"
-        style={{
-          top: `calc(${topPercent}% + ${topPx}px)`,
-          transform: `translateY(${translateYPercent}%)`,
-        }}
+        style={{ top: '50%', transform: 'translateY(-50%)' }}
       >
-        <div style={{ transform: `scale(${scale})`, transformOrigin: 'center center' }}>
+        <div
+          ref={signScaleRef}
+          style={{
+            transform: `scale(${DESKTOP_INTRO_SCALE})`,
+            transformOrigin: 'center center',
+          }}
+        >
           <SignShape
             width={SIGN_WIDTH}
             height={SIGN_HEIGHT}
@@ -150,11 +193,12 @@ export default function HomePage() {
           />
         </div>
 
-        {/* Scroll cue — fades out quickly */}
-        {cueOpacity > 0 && (
+        {/* Scroll cue */}
+        {!done && (
           <div
-            className="mt-20 flex flex-col items-center gap-2 text-white/40"
-            style={{ opacity: cueOpacity }}
+            ref={cueRef}
+            className="mt-12 md:mt-20 flex flex-col items-center gap-2 text-white/40"
+            style={{ opacity: 1 }}
           >
             <span
               className="text-xs tracking-[0.2em] uppercase"
