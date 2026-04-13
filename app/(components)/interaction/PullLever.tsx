@@ -34,6 +34,11 @@ export default function PullLever({
   hidden?: boolean;
 }) {
   const [revealed, setRevealed] = useState(!hidden);
+  const initialOffsetRef = useRef<number | null>(null);
+
+  if (initialOffsetRef.current === null && !hidden) {
+    initialOffsetRef.current = direction === 'prev' ? -400 : 400;
+  }
 
   useEffect(() => {
     if (!hidden && !revealed) {
@@ -58,6 +63,7 @@ export default function PullLever({
     noteOffset: NOTE_OFFSET,
     handleWidth: HANDLE_WIDTH,
     handleHeight: HANDLE_HEIGHT,
+    initialOffsetX: initialOffsetRef.current ?? 0,
   });
 
   const toLocal = useCallback(

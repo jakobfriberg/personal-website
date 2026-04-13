@@ -190,7 +190,7 @@ export default function MainContent() {
           style={{
             boxShadow: '0 0 0 9999px #35383B',
             background: [
-              'linear-gradient(to right, #35383B, transparent 20%, transparent 80%, #35383B)',
+              'linear-gradient(to right, #35383B, transparent 35%, transparent 65%, #35383B)',
               'linear-gradient(to bottom, #35383B, transparent 20%, transparent 80%, #35383B)',
             ].join(', '),
           }}

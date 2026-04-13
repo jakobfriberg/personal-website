@@ -16,6 +16,7 @@ interface RopeOptions {
   noteOffset?: number;   // px — distance from handle bottom to note hole
   handleWidth?: number;  // px — visual handle width
   handleHeight?: number; // px — visual handle height
+  initialOffsetX?: number; // px — horizontal displacement for swing-in
 }
 
 // ── Constants ────────────────────────────────────────────────────────
@@ -40,6 +41,7 @@ export function useVerletRope(options: RopeOptions) {
   const {
     anchorX, anchorY, segmentCount, segmentLength,
     noteOffset = 0, handleWidth = 0, handleHeight = 0,
+    initialOffsetX = 0,
   } = options;
 
   const worldRef = useRef<planck.World | null>(null);
@@ -93,8 +95,8 @@ export function useVerletRope(options: RopeOptions) {
       const body = world.createBody({
         type: 'dynamic',
         position: planck.Vec2(ax, ay - i * segLen),
-        linearDamping: 5.0,
-        angularDamping: 4.0,
+        linearDamping: 1.5,
+        angularDamping: 2.0,
       });
 
       if (isHandle) {
@@ -210,6 +212,33 @@ export function useVerletRope(options: RopeOptions) {
       noteBodyRef.current = noteBody;
     }
 
+    // Displace dynamic bodies for swing-in effect (joints stay correct)
+    if (initialOffsetX !== 0) {
+      const offM = initialOffsetX / SCALE;
+      for (let i = 1; i < bodies.length; i++) {
+        const t = i / segmentCount;
+        const pos = bodies[i].getPosition();
+        bodies[i].setTransform(
+          planck.Vec2(pos.x + offM * t, pos.y),
+          bodies[i].getAngle(),
+        );
+      }
+      // Thread + note bodies too
+      for (const b of [...threadLeftRef.current, ...(noteBodyRef.current ? [noteBodyRef.current] : [])]) {
+        const pos = b.getPosition();
+        b.setTransform(planck.Vec2(pos.x + offM, pos.y), b.getAngle());
+      }
+      // Give the handle a twist and upward kick as it swings in
+      const handle = bodies[bodies.length - 1];
+      const torqueDir = initialOffsetX > 0 ? -1 : 1;
+      handle.applyAngularImpulse(torqueDir * 20);
+      handle.applyLinearImpulse(
+        planck.Vec2(0, 30),
+        handle.getWorldCenter(),
+        true,
+      );
+    }
+
     // Simulation loop
     const step = () => {
       world.step(TIME_STEP, VELOCITY_ITERATIONS, POSITION_ITERATIONS);
@@ -276,7 +305,7 @@ export function useVerletRope(options: RopeOptions) {
       threadRightRef.current = [];
       noteBodyRef.current = null;
     };
-  }, [anchorX, anchorY, segmentCount, segmentLength, noteOffset, handleWidth, handleHeight]);
+  }, [anchorX, anchorY, segmentCount, segmentLength, noteOffset, handleWidth, handleHeight, initialOffsetX]);
 
   // Pull impulse — downward in physics = negative Y
   const pull = useCallback(() => {
