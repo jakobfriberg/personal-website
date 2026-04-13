@@ -73,3 +73,8 @@
   0%, 100% { transform: translateX(0); }
   50% { transform: translateX(80px); }
 }
+
+@keyframes stroke-trace {
+  from { stroke-dashoffset: 500; }
+  to   { stroke-dashoffset: 0; }
+}

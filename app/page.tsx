@@ -89,6 +89,7 @@ export default function HomePage() {
       }
       if (signScaleRef.current) {
         signScaleRef.current.style.transform = `scale(${scale})`;
+        signScaleRef.current.style.visibility = 'visible';
       }
       if (contentRef.current) {
         contentRef.current.style.opacity = String(contentOpacity);
@@ -161,8 +162,7 @@ export default function HomePage() {
       {!done && (
         <div
           ref={vignetteRef}
-          className="fixed inset-0 z-40 cursor-pointer"
-          onClick={() => { targetRef.current = 1; }}
+          className="fixed inset-0 z-40"
           style={{
             opacity: 1,
             background: [
@@ -181,8 +181,10 @@ export default function HomePage() {
       >
         <div
           ref={signScaleRef}
+          className="cursor-pointer pointer-events-auto"
+          onClick={() => { targetRef.current = 1; }}
           style={{
-            transform: `scale(${DESKTOP_INTRO_SCALE})`,
+            visibility: 'hidden',
             transformOrigin: 'center center',
           }}
         >
@@ -197,7 +199,8 @@ export default function HomePage() {
         {!done && (
           <div
             ref={cueRef}
-            className="mt-12 md:mt-20 flex flex-col items-center gap-2 text-white/40"
+            className="mt-12 md:mt-20 flex flex-col items-center gap-2 text-white/40 cursor-pointer pointer-events-auto"
+            onClick={() => { targetRef.current = 1; }}
             style={{ opacity: 1 }}
           >
             <span
