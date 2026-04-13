@@ -2,25 +2,37 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { useVerletRope } from '@/app/hooks/use-verlet-rope';
+import { perpendicular, useVerletRope } from '@/app/hooks/rope';
 
+// ── Layout ──────────────────────────────────────────────────────────
 const SEGMENT_COUNT = 8;
-const SEGMENT_LENGTH = 60;   // ~480px total rope
+const SEGMENT_LENGTH = 60;
 const HANDLE_WIDTH = 50;
 const HANDLE_HEIGHT = 210;
-const SVG_WIDTH = 210;        // extra width for swing room
+const SVG_WIDTH = 210;
 const ROPE_LENGTH = SEGMENT_COUNT * SEGMENT_LENGTH;
-const NOTE_OFFSET = 10;       // px from handle bottom to note hole
+const NOTE_OFFSET = 10;
 const SVG_HEIGHT = ROPE_LENGTH + HANDLE_HEIGHT + NOTE_OFFSET + 160;
-
 const ANCHOR_X = SVG_WIDTH / 2;
 const ANCHOR_Y = 0;
 
-// How far the handle must be pulled down to trigger navigation
+// ── Interaction ─────────────────────────────────────────────────────
 const PULL_THRESHOLD = 40;
-
-// How far up to hide the lever (rope + handle fully above)
+const DRAG_THRESHOLD_PX = 5;
 const HIDE_OFFSET = ROPE_LENGTH + HANDLE_HEIGHT + NOTE_OFFSET + 200;
+const SWING_IN_OFFSET = 400;
+
+// ── Visual ──────────────────────────────────────────────────────────
+const ROPE_VISUAL_WIDTH = 3;
+const NOTE_SIZE = 66;
+const NOTE_CENTER_X_NEXT = 33;
+const NOTE_CENTER_X_PREV = 35;
+const NOTE_CENTER_Y = 10;
+const HANDLE_FILL = '#35383B';
+const HANDLE_CORNER_RADIUS = 16;
+const MUTED_OPACITY = 0.12;
+const REVEAL_DURATION = '1.2s';
+const REVEAL_EASING = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
 
 export default function PullLever({
   direction,
@@ -37,7 +49,7 @@ export default function PullLever({
   const initialOffsetRef = useRef<number | null>(null);
 
   if (initialOffsetRef.current === null && !hidden) {
-    initialOffsetRef.current = direction === 'prev' ? -400 : 400;
+    initialOffsetRef.current = direction === 'prev' ? -SWING_IN_OFFSET : SWING_IN_OFFSET;
   }
 
   useEffect(() => {
@@ -52,7 +64,7 @@ export default function PullLever({
   const svgRef = useRef<SVGSVGElement>(null);
 
   const {
-    points, handleAngle, threadLeftPoints: tLeft, threadRightPoints: tRight,
+    points, handleAngle, threadLeftPoints, threadRightPoints,
     notePos, noteAngle,
     pull, nudge, startDrag, moveDrag, endDrag,
   } = useVerletRope({
@@ -65,6 +77,10 @@ export default function PullLever({
     handleHeight: HANDLE_HEIGHT,
     initialOffsetX: initialOffsetRef.current ?? 0,
   });
+
+  // Track points via ref so callbacks don't rebuild every physics frame
+  const pointsRef = useRef(points);
+  pointsRef.current = points;
 
   const toLocal = useCallback(
     (e: React.PointerEvent) => {
@@ -84,21 +100,20 @@ export default function PullLever({
       if (disabled) return;
       draggingRef.current = true;
       didMoveRef.current = false;
-      dragStartYRef.current = points[points.length - 1].y;
+      const pts = pointsRef.current;
+      dragStartYRef.current = pts[pts.length - 1].y;
       pointerStartRef.current = { x: e.clientX, y: e.clientY };
       (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     },
-    [disabled, points],
+    [disabled],
   );
-
-  const DRAG_THRESHOLD = 5;
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent) => {
       if (!draggingRef.current) return;
       const dx = e.clientX - pointerStartRef.current.x;
       const dy = e.clientY - pointerStartRef.current.y;
-      if (!didMoveRef.current && dx * dx + dy * dy < DRAG_THRESHOLD * DRAG_THRESHOLD) return;
+      if (!didMoveRef.current && dx * dx + dy * dy < DRAG_THRESHOLD_PX * DRAG_THRESHOLD_PX) return;
 
       const local = toLocal(e);
       if (!didMoveRef.current) {
@@ -117,7 +132,8 @@ export default function PullLever({
     const wasDrag = didMoveRef.current;
 
     if (wasDrag) {
-      const lastY = points[points.length - 1].y;
+      const pts = pointsRef.current;
+      const lastY = pts[pts.length - 1].y;
       const pullDistance = lastY - dragStartYRef.current;
       endDrag();
       if (pullDistance > PULL_THRESHOLD) {
@@ -127,43 +143,33 @@ export default function PullLever({
       pull();
       onClick();
     }
-  }, [points, endDrag, pull, onClick]);
+  }, [endDrag, pull, onClick]);
 
   const handleMouseEnter = useCallback(() => {
     if (disabled || draggingRef.current) return;
     nudge();
   }, [disabled, nudge]);
 
-  // Last particle = handle top (body position)
   const lastPoint = points[points.length - 1];
   const handleAngleDeg = handleAngle * (180 / Math.PI);
 
-  // Rope: two parallel lines for band look
-  const ROPE_WIDTH = 3;
   const leftPoints: string[] = [];
   const rightPoints: string[] = [];
 
   for (let i = 0; i < points.length; i++) {
     const next = points[Math.min(i + 1, points.length - 1)];
     const prev = points[Math.max(i - 1, 0)];
-    const dx = next.x - prev.x;
-    const dy = next.y - prev.y;
-    const len = Math.sqrt(dx * dx + dy * dy) || 1;
-    const nx = -dy / len;
-    const ny = dx / len;
-    leftPoints.push(`${points[i].x + nx * ROPE_WIDTH},${points[i].y + ny * ROPE_WIDTH}`);
-    rightPoints.push(`${points[i].x - nx * ROPE_WIDTH},${points[i].y - ny * ROPE_WIDTH}`);
+    const { nx, ny } = perpendicular(next.x - prev.x, next.y - prev.y);
+    leftPoints.push(`${points[i].x + nx * ROPE_VISUAL_WIDTH},${points[i].y + ny * ROPE_VISUAL_WIDTH}`);
+    rightPoints.push(`${points[i].x - nx * ROPE_VISUAL_WIDTH},${points[i].y - ny * ROPE_VISUAL_WIDTH}`);
   }
 
-  // Thread lines from physics
-  const threadLeftStr = tLeft.map(p => `${p.x},${p.y}`).join(' ');
-  const threadRightStr = tRight.map(p => `${p.x},${p.y}`).join(' ');
-
-  // Note angle in degrees
+  const threadLeftStr = threadLeftPoints.map(p => `${p.x},${p.y}`).join(' ');
+  const threadRightStr = threadRightPoints.map(p => `${p.x},${p.y}`).join(' ');
   const noteAngleDeg = noteAngle * (180 / Math.PI);
 
   const muted = disabled && revealed;
-  const strokeColor = muted ? 'rgba(255,255,255,0.12)' : 'white';
+  const strokeColor = muted ? `rgba(255,255,255,${MUTED_OPACITY})` : 'white';
 
   return (
     <div
@@ -175,7 +181,7 @@ export default function PullLever({
         width: HANDLE_WIDTH,
         height: SVG_HEIGHT,
         transform: revealed ? 'translateY(0)' : `translateY(-${HIDE_OFFSET}px)`,
-        transition: 'transform 1.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
+        transition: `transform ${REVEAL_DURATION} ${REVEAL_EASING}`,
       }}
     >
       <svg
@@ -189,7 +195,6 @@ export default function PullLever({
         className="absolute top-0 left-0"
         style={{ left: -(SVG_WIDTH - HANDLE_WIDTH) / 2 }}
       >
-        {/* Rope — two parallel edges */}
         <polyline
           points={leftPoints.join(' ')}
           stroke={strokeColor}
@@ -205,7 +210,7 @@ export default function PullLever({
           pointerEvents="none"
         />
 
-        {/* Thread behind note — left side of loop */}
+        {/* Thread left — renders behind note (z-order) */}
         <polyline
           points={threadLeftStr}
           stroke={strokeColor}
@@ -214,19 +219,18 @@ export default function PullLever({
           pointerEvents="none"
         />
 
-        {/* Note — positioned at hole center, referencing external SVG */}
         <image
           href={direction === 'next' ? '/note-next.svg' : '/note-back.svg'}
-          x={notePos.x - (direction === 'next' ? 33 : 35)}
-          y={notePos.y - 10}
-          width={66}
-          height={66}
+          x={notePos.x - (direction === 'next' ? NOTE_CENTER_X_NEXT : NOTE_CENTER_X_PREV)}
+          y={notePos.y - NOTE_CENTER_Y}
+          width={NOTE_SIZE}
+          height={NOTE_SIZE}
           transform={`rotate(${noteAngleDeg}, ${notePos.x}, ${notePos.y})`}
           pointerEvents="none"
-          opacity={muted ? 0.12 : 1}
+          opacity={muted ? MUTED_OPACITY : 1}
         />
 
-        {/* Thread in front of note — right side of loop */}
+        {/* Thread right — renders in front of note (z-order) */}
         <polyline
           points={threadRightStr}
           stroke={strokeColor}
@@ -235,8 +239,6 @@ export default function PullLever({
           pointerEvents="none"
         />
 
-
-        {/* Handle — positioned at top, interactive */}
         <g
           transform={`translate(${lastPoint.x}, ${lastPoint.y}) rotate(${handleAngleDeg}) translate(${-HANDLE_WIDTH / 2}, 0)`}
           onPointerDown={handlePointerDown}
@@ -246,10 +248,10 @@ export default function PullLever({
           <rect
             width={HANDLE_WIDTH}
             height={HANDLE_HEIGHT}
-            fill="#35383B"
+            fill={HANDLE_FILL}
             stroke={strokeColor}
             strokeWidth="2"
-            rx="16"
+            rx={HANDLE_CORNER_RADIUS}
           />
         </g>
       </svg>
