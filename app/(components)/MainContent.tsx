@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 import { BG_GEAR_DEFAULTS, DEBUG, GEAR_CONFIG, MOTOR_DEFAULTS, THINGY_DEFAULTS } from '@/app/config/gear';
 import { BG_CANVAS_OFFSET, DESIGN_VIEWPORT } from '@/app/config/canvas';
@@ -16,6 +16,7 @@ import PullLever from './interaction/PullLever';
 import MobileNav from './ui/MobileNav';
 import SocialLinks from './ui/SocialLinks';
 export default function MainContent() {
+  const bgGearImgRef = useRef<HTMLImageElement>(null);
   const [gear, setGear] = useState(GEAR_DEFAULTS);
   const [thingy, setThingy] = useState(THINGY_DEFAULTS);
   const [activeIndex, setActiveIndex] = useState(0);
@@ -126,11 +127,11 @@ export default function MainContent() {
             }}
           >
             <img
+              ref={bgGearImgRef}
               src="/large-gear-bg.svg"
               alt=""
               width={600}
               height={600}
-              style={{ animation: `slow-spin ${GEAR_CONFIG.bgSpinDuration}s linear infinite` }}
             />
           </div>
 
@@ -144,7 +145,10 @@ export default function MainContent() {
               transformOrigin: 'top left',
             }}
           >
-            <MotorSvg spinDuration={GEAR_CONFIG.bgSpinDuration / GEAR_CONFIG.gearRatio} />
+            <MotorSvg
+              spinDuration={GEAR_CONFIG.bgSpinDuration / GEAR_CONFIG.gearRatio}
+              bgGearRef={bgGearImgRef}
+            />
           </div>
 
           {/* z-[0]: Thingy */}
