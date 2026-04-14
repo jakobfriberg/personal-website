@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@mdi/js": "^7.4.47",
+    "@next/third-parties": "^16.2.3",
     "@tailwindcss/postcss": "^4.1.16",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.7.0",

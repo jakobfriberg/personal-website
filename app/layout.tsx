@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { GoogleAnalytics } from '@next/third-parties/google';
 import './globals.css';
 import { inter, jetbrainsMono, bnRogall } from './fonts';
 
@@ -17,6 +18,9 @@ export default function RootLayout({
       <body className="min-h-screen overflow-hidden">
         <main>{children}</main>
       </body>
+      {process.env.NODE_ENV === 'production' && (
+        <GoogleAnalytics gaId="G-DLX4Y33RFT" />
+      )}
     </html>
   );
 }
