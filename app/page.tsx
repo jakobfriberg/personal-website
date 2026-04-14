@@ -15,6 +15,7 @@ const SIGN_SVG_WIDTH = SIGN_WIDTH + 60;
 const DESKTOP_INTRO_SCALE = 1.8;
 const DESKTOP_FINAL_SCALE = 1.0;
 const FINAL_TOP = 16;
+const FINAL_TOP_MOBILE = -16;
 
 const SCROLL_SENSITIVITY = 0.0008;
 const SMOOTH_FACTOR = 0.06;
@@ -49,6 +50,7 @@ export default function HomePage() {
     return {
       intro: Math.min(DESKTOP_INTRO_SCALE, vw * 0.85 / SIGN_SVG_WIDTH),
       final: Math.min(DESKTOP_FINAL_SCALE, vw * 0.92 / SIGN_SVG_WIDTH),
+      finalTop: vw < 1024 ? FINAL_TOP_MOBILE : FINAL_TOP,
     };
   }, []);
 
@@ -78,7 +80,7 @@ export default function HomePage() {
       // Apply to DOM directly — only transform + opacity (GPU-composited)
       const scale = lerp(scales.intro, scales.final, p);
       const topPercent = lerp(50, 0, p);
-      const topPx = lerp(0, FINAL_TOP, p);
+      const topPx = lerp(0, scales.finalTop, p);
       const translateY = lerp(-50, 0, p);
       const contentOpacity = clamp((p - 0.5) / 0.5, 0, 1);
       const vignetteOpacity = clamp(1 - p * 2.5, 0, 1);
