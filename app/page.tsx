@@ -160,7 +160,7 @@ export default function HomePage() {
     <div className="fixed inset-0 bg-main-grid">
       {/* Main content */}
       <div ref={contentRef} style={{ opacity: 0 }}>
-        <MainContent />
+        <MainContent introComplete={done} />
       </div>
 
       {/* Click blocker + vignette */}

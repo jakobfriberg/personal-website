@@ -15,7 +15,7 @@ import SmokeFog from './gear/SmokeFog';
 import PullLever from './interaction/PullLever';
 import MobileNav from './ui/MobileNav';
 import SocialLinks from './ui/SocialLinks';
-export default function MainContent() {
+export default function MainContent({ introComplete = false }: { introComplete?: boolean }) {
   const bgGearImgRef = useRef<HTMLImageElement>(null);
   const [gear, setGear] = useState(GEAR_DEFAULTS);
   const [thingy, setThingy] = useState(THINGY_DEFAULTS);
@@ -173,12 +173,13 @@ export default function MainContent() {
             direction="prev"
             onClick={prev}
             disabled={activeIndex === 0}
-            hidden={activeIndex === 0}
+            hidden={!introComplete || activeIndex === 0}
           />
           <PullLever
             direction="next"
             onClick={next}
             disabled={activeIndex === CARDS.length - 1}
+            hidden={!introComplete}
           />
         </div>
       </div>
