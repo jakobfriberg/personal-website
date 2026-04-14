@@ -3,7 +3,7 @@ import './globals.css';
 import { inter, jetbrainsMono, bnRogall } from './fonts';
 
 export const metadata: Metadata = {
-  title: 'Jakob Friberg',
+  title: 'Jakob Eck Friberg',
   description: 'Personal website of Jakob Friberg',
 };
 
