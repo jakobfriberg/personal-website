@@ -1,6 +1,6 @@
 export const CLOUD_CONFIG = {
   // ── Source ───────────────────────────────────────────────────────
-  svgUrl: '/clouds-2.svg',
+  svgUrl: '/images/clouds-2.svg',
   textureSize: 512,
 
   // ── Colors ───────────────────────────────────────────────────────

@@ -4,7 +4,7 @@ import { useCallback, useState } from 'react';
 
 import { GEAR_CONFIG } from '@/app/config/gear';
 
-import DebugPanel, { posSliders, tpsSliders } from './DebugPanel';
+import DebugPanel, { posSliders, tpsSliders, type DebugTab } from './DebugPanel';
 
 export interface GearValues {
   lgTop: number;
@@ -42,6 +42,7 @@ export default function GearDebug({
   onMotorChange,
   thingyProgress,
   onThingyProgressChange,
+  tabs,
 }: {
   onChange: (values: GearValues) => void;
   thingy: ThingyValues;
@@ -52,6 +53,7 @@ export default function GearDebug({
   onMotorChange: (values: ThingyValues) => void;
   thingyProgress: number;
   onThingyProgressChange: (value: number) => void;
+  tabs?: DebugTab[];
 }) {
   const [pos, setPos] = useState(GEAR_DEFAULTS);
 
@@ -104,6 +106,7 @@ export default function GearDebug({
           sliders: [{ key: 'progress', label: 'pos', unit: '', sensitivity: 0.005 }],
         },
       ]}
+      tabs={tabs}
     />
   );
 }

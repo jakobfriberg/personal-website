@@ -2,11 +2,15 @@
 
 import { useCallback, useRef, useState } from 'react';
 
-import { BG_GEAR_DEFAULTS, DEBUG, GEAR_CONFIG, MOTOR_DEFAULTS, THINGY_DEFAULTS } from '@/app/config/gear';
+import { DEBUG } from '@/app/config/debug';
+import { BG_GEAR_DEFAULTS, GEAR_CONFIG, MOTOR_DEFAULTS, THINGY_DEFAULTS } from '@/app/config/gear';
 import { BG_CANVAS_OFFSET, DESIGN_VIEWPORT } from '@/app/config/canvas';
 import { CARDS } from '@/app/data/cards';
+import { SOUNDS } from '@/app/config/sound';
+import { useSound } from '@/app/hooks/use-sound';
 
 import GearDebug, { GEAR_DEFAULTS, type GearValues } from './debug/GearDebug';
+import { useSoundDebugTab } from './debug/SoundDebug';
 import CardCarousel from './gear/CardCarousel';
 import MechanicalCounter from './gear/MechanicalCounter';
 import MotorSvg from './gear/MotorSvg';
@@ -14,6 +18,7 @@ import ThingySvg from './gear/ThingySvg';
 import SmokeFog from './gear/SmokeFog';
 import PullLever from './interaction/PullLever';
 import MobileNav from './ui/MobileNav';
+import MuteButton from './ui/MuteButton';
 import SocialLinks from './ui/SocialLinks';
 export default function MainContent({ introComplete = false }: { introComplete?: boolean }) {
   const bgGearImgRef = useRef<HTMLImageElement>(null);
@@ -23,6 +28,11 @@ export default function MainContent({ introComplete = false }: { introComplete?:
   const [bgGear, setBgGear] = useState(BG_GEAR_DEFAULTS);
   const [motor, setMotor] = useState(MOTOR_DEFAULTS);
   const [debugProgress, setDebugProgress] = useState<number | null>(null);
+  const playCardSound = useSound(SOUNDS.cardSwitch.src);
+  const playCardSoundBack = useSound(SOUNDS.cardSwitchBack.src);
+  const playWhirr = useSound(SOUNDS.mechWhirr.src);
+  const playLargeGear = useSound(SOUNDS.largeGear.src);
+  const soundTab = useSoundDebugTab();
 
   const handleGearChange = useCallback(
     (values: GearValues) => setGear(values),
@@ -30,12 +40,12 @@ export default function MainContent({ introComplete = false }: { introComplete?:
   );
 
   const prev = useCallback(
-    () => { setDebugProgress(null); setActiveIndex((i) => Math.max(0, i - 1)); },
-    [],
+    () => { setDebugProgress(null); playCardSoundBack(); playWhirr(); playLargeGear(); setActiveIndex((i) => Math.max(0, i - 1)); },
+    [playCardSoundBack, playWhirr, playLargeGear],
   );
   const next = useCallback(
-    () => { setDebugProgress(null); setActiveIndex((i) => Math.min(CARDS.length - 1, i + 1)); },
-    [],
+    () => { setDebugProgress(null); playCardSound(); playWhirr(); playLargeGear(); setActiveIndex((i) => Math.min(CARDS.length - 1, i + 1)); },
+    [playCardSound, playWhirr, playLargeGear],
   );
 
   const lgAngle = activeIndex * GEAR_CONFIG.degreesPerCard;
@@ -72,7 +82,7 @@ export default function MainContent({ introComplete = false }: { introComplete?:
             }}
           >
             <img
-              src="/large-gear.svg"
+              src="/images/large-gear.svg"
               alt=""
               width={600}
               height={600}
@@ -83,7 +93,7 @@ export default function MainContent({ introComplete = false }: { introComplete?:
             />
             {/* Knob — centered on gear, doesn't rotate */}
             <img
-              src="/knob.svg"
+              src="/images/knob.svg"
               alt=""
               width={120}
               height={120}
@@ -105,7 +115,7 @@ export default function MainContent({ introComplete = false }: { introComplete?:
             }}
           >
             <img
-              src="/small-gear.svg"
+              src="/images/small-gear.svg"
               alt=""
               width={360}
               height={360}
@@ -128,7 +138,7 @@ export default function MainContent({ introComplete = false }: { introComplete?:
           >
             <img
               ref={bgGearImgRef}
-              src="/large-gear-bg.svg"
+              src="/images/large-gear-bg.svg"
               alt=""
               width={600}
               height={600}
@@ -221,6 +231,7 @@ export default function MainContent({ introComplete = false }: { introComplete?:
 
       {/* z-[4]: Social links — bottom right */}
       <SocialLinks />
+      <MuteButton />
 
       {/* Debug panel */}
       {DEBUG && (
@@ -234,6 +245,7 @@ export default function MainContent({ introComplete = false }: { introComplete?:
           onMotorChange={setMotor}
           thingyProgress={thingyProgress}
           onThingyProgressChange={setDebugProgress}
+          tabs={[soundTab]}
         />
       )}
     </div>

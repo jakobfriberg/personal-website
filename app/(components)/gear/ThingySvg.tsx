@@ -47,7 +47,7 @@ export default function ThingySvg({
     const el = containerRef.current;
     if (!el) return;
 
-    fetch('/thingy.svg')
+    fetch('/images/thingy.svg')
       .then((r) => r.text())
       .then((svgText) => {
         el.innerHTML = svgText;

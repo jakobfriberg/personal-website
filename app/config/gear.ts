@@ -1,8 +1,6 @@
 // Exact tooth count ratio — independent of visual scaling
 const TOOTH_RATIO = 53 / 15; // ≈ 3.5333...
 
-export const DEBUG = false;
-
 export const GEAR_CONFIG = {
   // Large gear position & scale
   lgTop: -25.36,
@@ -16,8 +14,8 @@ export const GEAR_CONFIG = {
 
   // Rotation
   gearRatio: TOOTH_RATIO,
-  degreesPerCard: 30,
-  transitionDuration: 1.0,
+  degreesPerCard: 40,
+  transitionDuration: 0.8,
   transitionEasing: 'linear',
 
   // Thingy path progress — fraction (0-1) along movement-path per card index

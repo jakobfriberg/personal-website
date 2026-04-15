@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { GoogleAnalytics } from '@next/third-parties/google';
 import './globals.css';
 import { inter, jetbrainsMono, bnRogall } from './fonts';
+import { SoundProvider } from './context/sound-context';
 
 export const metadata: Metadata = {
   title: 'Jakob Eck Friberg',
@@ -16,7 +17,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable} ${bnRogall.variable}`}>
       <body className="min-h-screen overflow-hidden">
-        <main>{children}</main>
+        <SoundProvider>
+          <main>{children}</main>
+        </SoundProvider>
       </body>
       {process.env.NODE_ENV === 'production' && (
         <GoogleAnalytics gaId="G-DLX4Y33RFT" />

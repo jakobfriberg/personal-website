@@ -37,7 +37,7 @@ export default function MotorSvg({
     const el = containerRef.current;
     if (!el) return;
 
-    fetch('/gear-with-motor-bg.svg')
+    fetch('/images/gear-with-motor-bg.svg')
       .then((r) => r.text())
       .then((svgText) => {
         el.innerHTML = svgText;

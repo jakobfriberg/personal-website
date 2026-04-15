@@ -220,7 +220,7 @@ export default function PullLever({
         />
 
         <image
-          href={direction === 'next' ? '/note-next.svg' : '/note-back.svg'}
+          href={direction === 'next' ? '/images/note-next.svg' : '/images/note-back.svg'}
           x={notePos.x - (direction === 'next' ? NOTE_CENTER_X_NEXT : NOTE_CENTER_X_PREV)}
           y={notePos.y - NOTE_CENTER_Y}
           width={NOTE_SIZE}
