@@ -39,13 +39,35 @@ export default function MainContent({ introComplete = false }: { introComplete?:
     [],
   );
 
+  const goToCard = useCallback(
+    (direction: 'prev' | 'next') => {
+      setDebugProgress(null);
+      playWhirr();
+      playLargeGear();
+      setActiveIndex((i) =>
+        direction === 'prev'
+          ? Math.max(0, i - 1)
+          : Math.min(CARDS.length - 1, i + 1),
+      );
+    },
+    [playWhirr, playLargeGear],
+  );
+
   const prev = useCallback(
-    () => { setDebugProgress(null); playCardSoundBack(); playWhirr(); playLargeGear(); setActiveIndex((i) => Math.max(0, i - 1)); },
-    [playCardSoundBack, playWhirr, playLargeGear],
+    () => { playCardSoundBack(); goToCard('prev'); },
+    [playCardSoundBack, goToCard],
   );
   const next = useCallback(
-    () => { setDebugProgress(null); playCardSound(); playWhirr(); playLargeGear(); setActiveIndex((i) => Math.min(CARDS.length - 1, i + 1)); },
-    [playCardSound, playWhirr, playLargeGear],
+    () => { playCardSound(); goToCard('next'); },
+    [playCardSound, goToCard],
+  );
+  const swipePrev = useCallback(
+    () => { if (activeIndex > 0) goToCard('prev'); },
+    [activeIndex, goToCard],
+  );
+  const swipeNext = useCallback(
+    () => { if (activeIndex < CARDS.length - 1) goToCard('next'); },
+    [activeIndex, goToCard],
   );
 
   const lgAngle = activeIndex * GEAR_CONFIG.degreesPerCard;
@@ -217,7 +239,7 @@ export default function MainContent({ introComplete = false }: { introComplete?:
           />
         </div>
         <div className="-mt-4 w-full max-w-[1440px]">
-          <CardCarousel activeIndex={activeIndex} />
+          <CardCarousel activeIndex={activeIndex} onPrev={swipePrev} onNext={swipeNext} />
         </div>
       </div>
 
