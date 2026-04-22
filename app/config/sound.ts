@@ -28,6 +28,10 @@ export const SOUNDS = {
     src: '/sounds/el-large-gear-2.mp3',
     settings: { volume: 0.4, trimStart: 0, trimEnd: 1, speed: 1.0, speedVariance: 0.04, fadeIn: false, fadeOut: false },
   },
+  buttonTap: {
+    src: '/sounds/button-tap.mp3',
+    settings: { volume: 0.4, trimStart: 0, trimEnd: 1, speed: 1.0, speedVariance: 0, fadeIn: false, fadeOut: false },
+  },
 } satisfies Record<string, SoundDef>;
 
 export const SOUND_DEFAULTS: Record<string, SoundSettings> =

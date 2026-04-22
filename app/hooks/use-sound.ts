@@ -6,6 +6,45 @@ import { useSoundContext } from '@/app/context/sound-context';
 const bufferCache = new Map<string, AudioBuffer>();
 let sharedCtx: AudioContext | null = null;
 
+// ── AudioContext unlock ────────────────────────────────────────────
+// Mobile browsers require a user gesture to resume a suspended
+// AudioContext. iOS Safari only honors `click`; other events
+// (touchend, pointerup) leave the context permanently suspended.
+const UNLOCK_EVENTS = ['click', 'keydown'] as const;
+
+function removeUnlockListeners() {
+  UNLOCK_EVENTS.forEach((e) =>
+    document.removeEventListener(e, unlockAudioContext, true),
+  );
+}
+
+export function unlockAudioContext() {
+  if (sharedCtx?.state === 'running') {
+    removeUnlockListeners();
+    return;
+  }
+
+  if (!sharedCtx) sharedCtx = new AudioContext();
+
+  // Play silent buffer (Howler.js pattern)
+  const buf = sharedCtx.createBuffer(1, 1, 22050);
+  const src = sharedCtx.createBufferSource();
+  src.buffer = buf;
+  src.connect(sharedCtx.destination);
+  src.start(0);
+
+  const ctx = sharedCtx;
+  ctx.resume().then(() => {
+    if (ctx.state === 'running') removeUnlockListeners();
+  });
+}
+
+if (typeof window !== 'undefined') {
+  UNLOCK_EVENTS.forEach((e) =>
+    document.addEventListener(e, unlockAudioContext, true),
+  );
+}
+
 function getAudioContext() {
   if (!sharedCtx) sharedCtx = new AudioContext();
   return sharedCtx;
@@ -25,7 +64,7 @@ export function useSound(src: string) {
 
     fetch(src)
       .then((r) => r.arrayBuffer())
-      .then((data) => getAudioContext().decodeAudioData(data))
+      .then((data) => new OfflineAudioContext(1, 1, 44100).decodeAudioData(data))
       .then((buffer) => {
         bufferCache.set(src, buffer);
         bufferRef.current = buffer;
@@ -40,7 +79,8 @@ export function useSound(src: string) {
   settingsRef.current = getSettings(id);
 
   return useCallback(() => {
-    if (muted || !bufferRef.current) return;
+    if (muted) return;
+    if (!bufferRef.current) return;
     const ctx = getAudioContext();
     if (ctx.state === 'suspended') ctx.resume();
 

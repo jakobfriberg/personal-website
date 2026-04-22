@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { DEBUG } from '@/app/config/debug';
 import { BG_GEAR_DEFAULTS, GEAR_CONFIG, MOTOR_DEFAULTS, THINGY_DEFAULTS } from '@/app/config/gear';
@@ -28,10 +28,19 @@ export default function MainContent({ introComplete = false }: { introComplete?:
   const [bgGear, setBgGear] = useState(BG_GEAR_DEFAULTS);
   const [motor, setMotor] = useState(MOTOR_DEFAULTS);
   const [debugProgress, setDebugProgress] = useState<number | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 1024);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
   const playCardSound = useSound(SOUNDS.cardSwitch.src);
   const playCardSoundBack = useSound(SOUNDS.cardSwitchBack.src);
   const playWhirr = useSound(SOUNDS.mechWhirr.src);
   const playLargeGear = useSound(SOUNDS.largeGear.src);
+  const playButtonTap = useSound(SOUNDS.buttonTap.src);
   const soundTab = useSoundDebugTab();
 
   const handleGearChange = useCallback(
@@ -60,6 +69,14 @@ export default function MainContent({ introComplete = false }: { introComplete?:
   const next = useCallback(
     () => { playCardSound(); goToCard('next'); },
     [playCardSound, goToCard],
+  );
+  const mobilePrev = useCallback(
+    () => { playButtonTap(); goToCard('prev'); },
+    [playButtonTap, goToCard],
+  );
+  const mobileNext = useCallback(
+    () => { playButtonTap(); goToCard('next'); },
+    [playButtonTap, goToCard],
   );
   const swipePrev = useCallback(
     () => { if (activeIndex > 0) goToCard('prev'); },
@@ -239,14 +256,14 @@ export default function MainContent({ introComplete = false }: { introComplete?:
           />
         </div>
         <div className="-mt-4 w-full max-w-[1440px]">
-          <CardCarousel activeIndex={activeIndex} onPrev={swipePrev} onNext={swipeNext} />
+          <CardCarousel activeIndex={activeIndex} swipeEnabled={isMobile} onPrev={swipePrev} onNext={swipeNext} />
         </div>
       </div>
 
       {/* z-[5]: Mobile navigation — bottom center (mobile only) */}
       <MobileNav
-        onPrev={prev}
-        onNext={next}
+        onPrev={mobilePrev}
+        onNext={mobileNext}
         hasPrev={activeIndex > 0}
         hasNext={activeIndex < CARDS.length - 1}
       />

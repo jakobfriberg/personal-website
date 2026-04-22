@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import MainContent from '@/app/(components)/MainContent';
 import SignShape from '@/app/(components)/sign/SignShape';
+import { unlockAudioContext } from '@/app/hooks/use-sound';
 
 // ── Sign config ─────────────────────────────────────────────────────
 const SIGN_FONT_SIZE = 52;
@@ -31,6 +32,7 @@ function clamp(v: number, min: number, max: number) {
 
 export default function HomePage() {
   const [done, setDone] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   const targetRef = useRef(0);
   const currentRef = useRef(0);
@@ -44,6 +46,13 @@ export default function HomePage() {
   const contentRef = useRef<HTMLDivElement>(null);
   const vignetteRef = useRef<HTMLDivElement>(null);
   const cueRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 1024);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
+  }, []);
 
   const getScales = useCallback(() => {
     const vw = window.innerWidth;
@@ -129,8 +138,11 @@ export default function HomePage() {
     return () => window.removeEventListener('wheel', handler);
   }, []);
 
-  // Touch handlers
+  // Touch handlers — desktop only (on mobile, intro is tap-only
+  // so that a click event fires and unlocks AudioContext on iOS Safari)
   useEffect(() => {
+    if (isMobile) return;
+
     const onStart = (e: TouchEvent) => {
       touchYRef.current = e.touches[0].clientY;
     };
@@ -154,7 +166,7 @@ export default function HomePage() {
       window.removeEventListener('touchmove', onMove);
       window.removeEventListener('touchend', onEnd);
     };
-  }, []);
+  }, [isMobile]);
 
   return (
     <div className="fixed inset-0 bg-main-grid">
@@ -163,11 +175,12 @@ export default function HomePage() {
         <MainContent introComplete={done} />
       </div>
 
-      {/* Click blocker + vignette */}
+      {/* Click blocker + vignette — full-screen tap target on mobile */}
       {!done && (
         <div
           ref={vignetteRef}
-          className="fixed inset-0 z-40"
+          className="fixed inset-0 z-40 cursor-pointer"
+          onClick={() => { unlockAudioContext(); targetRef.current = 1; }}
           style={{
             opacity: 1,
             background: [
@@ -187,7 +200,7 @@ export default function HomePage() {
         <div
           ref={signScaleRef}
           className="cursor-pointer pointer-events-auto"
-          onClick={() => { targetRef.current = 1; }}
+          onClick={() => { unlockAudioContext(); targetRef.current = 1; }}
           style={{
             visibility: 'hidden',
             transformOrigin: 'center center',
@@ -205,11 +218,17 @@ export default function HomePage() {
           <div
             ref={cueRef}
             className="mt-12 md:mt-20 flex flex-col items-center gap-2 text-white/40 cursor-pointer pointer-events-auto"
-            onClick={() => { targetRef.current = 1; }}
+            onClick={() => { unlockAudioContext(); targetRef.current = 1; }}
             style={{ opacity: 1 }}
           >
             <span
-              className="text-xs tracking-[0.2em] uppercase"
+              className="text-xs tracking-[0.2em] uppercase lg:hidden"
+              style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
+            >
+              {'< tap to continue >'}
+            </span>
+            <span
+              className="text-xs tracking-[0.2em] uppercase hidden lg:inline"
               style={{ fontFamily: 'var(--font-jetbrains-mono), monospace' }}
             >
               scroll down
@@ -218,7 +237,7 @@ export default function HomePage() {
               width="20" height="12" viewBox="0 0 20 12"
               fill="none" stroke="currentColor" strokeWidth="2"
               strokeLinecap="round" strokeLinejoin="round"
-              className="animate-bounce"
+              className="animate-bounce hidden lg:block"
             >
               <polyline points="2,2 10,10 18,2" />
             </svg>

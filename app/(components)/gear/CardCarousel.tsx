@@ -70,10 +70,12 @@ function Card({ card, isActive }: { card: CardData; isActive: boolean }) {
 
 export default function CardCarousel({
   activeIndex,
+  swipeEnabled = false,
   onPrev,
   onNext,
 }: {
   activeIndex: number;
+  swipeEnabled?: boolean;
   onPrev?: () => void;
   onNext?: () => void;
 }) {
@@ -84,12 +86,12 @@ export default function CardCarousel({
   return (
     <motion.div
       className="relative flex items-center justify-center h-[380px] touch-pan-y"
-      onPan={(_e, info) => {
+      onPan={swipeEnabled ? (_e, info) => {
         isDraggingRef.current = true;
         const raw = info.offset.x;
         setDragX(MAX_DRAG * (raw / (Math.abs(raw) + MAX_DRAG)));
-      }}
-      onPanEnd={(_e, info) => {
+      } : undefined}
+      onPanEnd={swipeEnabled ? (_e, info) => {
         // Switch to animated transition BEFORE the state update triggers a render
         isDraggingRef.current = false;
         setDragX(0);
@@ -97,7 +99,7 @@ export default function CardCarousel({
           if (info.offset.x > 0) onPrev?.();
           else onNext?.();
         }
-      }}
+      } : undefined}
     >
       {CARDS.map((card, i) => {
         const transform = getCardTransform(i, activeIndex);
